@@ -48,12 +48,6 @@
         </dependency>
         <dependency>
             <groupId>com.abiquo</groupId>
-            <artifactId>api</artifactId>
-            <version>${api.version}</version>
-            <classifier>classes</classifier>
-        </dependency>
-        <dependency>
-            <groupId>com.abiquo</groupId>
             <artifactId>api-model-transport</artifactId>
             <version>${apimodel.version}</version>
         </dependency>

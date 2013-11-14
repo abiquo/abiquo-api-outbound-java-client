@@ -20,7 +20,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.abiquo.api.services.cloud.VirtualMachineMetadataService;
+import com.abiquo.bond.api.abqapi.VMMetadata;
 import com.google.common.base.Optional;
 
 /**
@@ -31,9 +31,9 @@ public class BackupEventConfiguration
 {
     final Logger logger = LoggerFactory.getLogger(BackupEventConfiguration.class);
 
-    private static DateFormat df = new SimpleDateFormat(VirtualMachineMetadataService.DATE_FORMAT);
+    private static DateFormat df = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
 
-    private static DateFormat tf = new SimpleDateFormat(VirtualMachineMetadataService.TIME_FORMAT);
+    private static DateFormat tf = new SimpleDateFormat(VMMetadata.TIME_FORMAT);
 
     private BackupDetailsDate definedhour;
 
@@ -49,7 +49,7 @@ public class BackupEventConfiguration
     public BackupEventConfiguration(final Map<String, Object> configdata)
     {
         Map<String, Object> settings =
-            (Map<String, Object>) configdata.get(VirtualMachineMetadataService.DEFINED_HOUR);
+            (Map<String, Object>) configdata.get(VMMetadata.DEFINED_HOUR);
         if (settings != null)
         {
             try
@@ -62,7 +62,7 @@ public class BackupEventConfiguration
             }
         }
 
-        settings = (Map<String, Object>) configdata.get(VirtualMachineMetadataService.WEEKLY);
+        settings = (Map<String, Object>) configdata.get(VMMetadata.WEEKLY);
         if (settings != null)
         {
             try
@@ -75,7 +75,7 @@ public class BackupEventConfiguration
             }
         }
 
-        settings = (Map<String, Object>) configdata.get(VirtualMachineMetadataService.HOURLY);
+        settings = (Map<String, Object>) configdata.get(VMMetadata.HOURLY);
         if (settings != null)
         {
             try
@@ -88,10 +88,7 @@ public class BackupEventConfiguration
             }
         }
 
-        settings = (Map<String, Object>) configdata.get(/*
-                                                         * We need a VirtualMachineMetadataService
-                                                         * constant here
-                                                         */"monthly");
+        settings = (Map<String, Object>) configdata.get(VMMetadata.MONTHLY);
         if (settings != null)
         {
             try
@@ -104,10 +101,7 @@ public class BackupEventConfiguration
             }
         }
 
-        settings = (Map<String, Object>) configdata.get(/*
-                                                         * We need a VirtualMachineMetadataService
-                                                         * constant here
-                                                         */"daily");
+        settings = (Map<String, Object>) configdata.get(VMMetadata.DAILY);
         if (settings != null)
         {
             try
@@ -173,8 +167,7 @@ public class BackupEventConfiguration
         BackupDetails(final Map<String, Object> settings)
         {
             @SuppressWarnings("unchecked")
-            List<String> disklist =
-                (List<String>) settings.get(VirtualMachineMetadataService.DISKS);
+            List<String> disklist = (List<String>) settings.get(VMMetadata.DISKS);
             if (disklist != null)
             {
                 for (String disk : disklist)
@@ -192,7 +185,7 @@ public class BackupEventConfiguration
         BackupDetailsHour(final Map<String, Object> settings) throws NumberFormatException
         {
             super(settings);
-            String hoursetting = (String) settings.get(VirtualMachineMetadataService.TIME);
+            String hoursetting = (String) settings.get(VMMetadata.TIME);
             hour = Integer.parseInt(hoursetting);
             if (hour < 0 || hour > 23)
             {
@@ -213,7 +206,7 @@ public class BackupEventConfiguration
         BackupDetailsTime(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
-            String timesetting = (String) settings.get(VirtualMachineMetadataService.TIME);
+            String timesetting = (String) settings.get(VMMetadata.TIME);
             hour = tf.parse(timesetting);
         }
 
@@ -230,7 +223,7 @@ public class BackupEventConfiguration
         BackupDetailsDate(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
-            String datesetting = (String) settings.get(VirtualMachineMetadataService.TIME);
+            String datesetting = (String) settings.get(VMMetadata.TIME);
             hour = df.parse(datesetting);
         }
     }
@@ -276,10 +269,9 @@ public class BackupEventConfiguration
 
     public enum WEEKDAYS
     {
-        MONDAY(VirtualMachineMetadataService.MONDAY), TUESDAY(VirtualMachineMetadataService.TUESDAY), WEDNESDAY(
-            VirtualMachineMetadataService.WEDNESDAY), THURSDAY(
-            VirtualMachineMetadataService.THURSDAY), FRIDAY(VirtualMachineMetadataService.FRIDAY), SATURDAY(
-            VirtualMachineMetadataService.SATURDAY), SUNDAY(VirtualMachineMetadataService.SUNDAY);
+        MONDAY(VMMetadata.MONDAY), TUESDAY(VMMetadata.TUESDAY), WEDNESDAY(VMMetadata.WEDNESDAY), THURSDAY(
+            VMMetadata.THURSDAY), FRIDAY(VMMetadata.FRIDAY), SATURDAY(VMMetadata.SATURDAY), SUNDAY(
+            VMMetadata.SUNDAY);
 
         private String key;
 

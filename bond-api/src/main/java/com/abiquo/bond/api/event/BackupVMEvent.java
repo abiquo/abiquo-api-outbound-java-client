@@ -9,7 +9,7 @@ package com.abiquo.bond.api.event;
 import java.text.ParseException;
 import java.util.Map;
 
-import com.abiquo.api.services.cloud.VirtualMachineMetadataService;
+import com.abiquo.bond.api.abqapi.VMMetadata;
 import com.abiquo.event.model.Event;
 import com.abiquo.server.core.cloud.MetadataDto;
 import com.abiquo.server.core.cloud.VirtualMachineDto;
@@ -62,31 +62,25 @@ public class BackupVMEvent extends VirtualMachineEvent
     @SuppressWarnings("unchecked")
     private void extractBackupData(final Map<String, Object> metadata)
     {
-        Map<String, Object> submetadata =
-            (Map<String, Object>) metadata.get(VirtualMachineMetadataService.METADATA);
+        Map<String, Object> submetadata = (Map<String, Object>) metadata.get(VMMetadata.METADATA);
         if (submetadata != null)
         {
             Map<String, Object> backupschedule =
-                (Map<String, Object>) submetadata.get(VirtualMachineMetadataService.BACKUP);
+                (Map<String, Object>) submetadata.get(VMMetadata.BACKUP);
             if (backupschedule != null)
             {
                 Map<String, Object> configdata =
-                    (Map<String, Object>) backupschedule
-                        .get(VirtualMachineMetadataService.COMPLETE);
+                    (Map<String, Object>) backupschedule.get(VMMetadata.COMPLETE);
                 if (configdata != null)
                 {
                     bcComplete = new BackupEventConfiguration(configdata);
                 }
-                configdata =
-                    (Map<String, Object>) backupschedule
-                        .get(VirtualMachineMetadataService.FILESYSTEM);
+                configdata = (Map<String, Object>) backupschedule.get(VMMetadata.FILESYSTEM);
                 if (configdata != null)
                 {
                     bcSnapshot = new BackupEventConfiguration(configdata);
                 }
-                configdata =
-                    (Map<String, Object>) backupschedule
-                        .get(VirtualMachineMetadataService.SNAPSHOT);
+                configdata = (Map<String, Object>) backupschedule.get(VMMetadata.SNAPSHOT);
                 if (configdata != null)
                 {
                     bcFileSystem = new BackupEventConfiguration(configdata);

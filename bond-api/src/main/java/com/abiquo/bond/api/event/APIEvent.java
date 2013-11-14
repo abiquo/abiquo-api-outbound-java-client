@@ -17,7 +17,6 @@ import com.abiquo.server.core.event.EventDto;
 /**
  * Generic class for representing events received from the M server or event store that don't
  * currently have a specific class to represent them.
- * 
  */
 public class APIEvent
 {
@@ -30,7 +29,9 @@ public class APIEvent
     private Date timestamp;
 
     /**
-     * As this is a handler for generic events, it simple stores a reference to the original com.abiquo.event.model.Event object received from the M server. It will be the responsibility of the plugin to extract any required data.
+     * As this is a handler for generic events, it simple stores a reference to the original
+     * com.abiquo.event.model.Event object received from the M server. It will be the responsibility
+     * of the plugin to extract any required data.
      * 
      * @param event
      */
@@ -41,7 +42,9 @@ public class APIEvent
     }
 
     /**
-     * As this is a handler for generic events, it simple stores a reference to the original com.abiquo.server.core.event.EventDto object received from the event store. It will be the responsibility of the plugin to extract any required data.
+     * As this is a handler for generic events, it simple stores a reference to the original
+     * com.abiquo.server.core.event.EventDto object received from the event store. It will be the
+     * responsibility of the plugin to extract any required data.
      * 
      * @param event
      */

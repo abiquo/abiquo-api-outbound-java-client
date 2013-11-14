@@ -24,9 +24,9 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.abiquo.api.services.cloud.VirtualMachineMetadataService;
 import com.abiquo.bond.api.APIConnection;
 import com.abiquo.bond.api.NameToVMLinks;
+import com.abiquo.bond.api.abqapi.VMMetadata;
 import com.abiquo.bond.api.plugin.BackupPluginInterface;
 import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.model.rest.RESTLink;
@@ -40,7 +40,6 @@ import com.google.common.base.Optional;
  * This class handles the fetching of data from the plugin and the updating of the Abiquo system
  * with this data. At the moment it only supports the updating of backup results. Other handlers can
  * be added by modifing the run method to handle the returned data.
- * 
  */
 public class ResponsesHandler extends APIConnection implements Runnable
 {
@@ -117,8 +116,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
 
                         @SuppressWarnings("unchecked")
                         Map<String, Object> mapMetadata =
-                            (Map<String, Object>) metadata
-                                .get(VirtualMachineMetadataService.METADATA);
+                            (Map<String, Object>) metadata.get(VMMetadata.METADATA);
                         if (mapMetadata == null)
                         {
                             mapMetadata = new HashMap<>();
@@ -132,9 +130,9 @@ public class ResponsesHandler extends APIConnection implements Runnable
                         }
 
                         Map<String, Object> backupResults = new HashMap<>();
-                        backupResults.put(VirtualMachineMetadataService.RESULTS, resultslist);
+                        backupResults.put(VMMetadata.RESULTS, resultslist);
 
-                        mapMetadata.put(VirtualMachineMetadataService.LAST_BACKUPS, backupResults);
+                        mapMetadata.put(VMMetadata.LAST_BACKUPS, backupResults);
 
                         WebTarget targetUpdate = client.target(link.getHref());
                         Invocation.Builder invocationBuilder =

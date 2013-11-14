@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.abiquo.api.services.cloud.VirtualMachineMetadataService;
+import com.abiquo.bond.api.abqapi.VMMetadata;
 
 /**
  * A class representing the result of a backup operation. A backup plugin will need to convert the
@@ -20,8 +20,7 @@ import com.abiquo.api.services.cloud.VirtualMachineMetadataService;
  */
 public class VMBackupStatus implements Comparable<VMBackupStatus>
 {
-    private static SimpleDateFormat dateformat =
-        new SimpleDateFormat(VirtualMachineMetadataService.DATE_FORMAT);
+    private static SimpleDateFormat dateformat = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
 
     private String reason;
 
@@ -44,7 +43,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     {
         Map<String, Object> metadata = new HashMap<>();
 
-        metadata.put(VirtualMachineMetadataService.DATE, dateformat.format(date));
+        metadata.put(VMMetadata.DATE, dateformat.format(date));
         metadata.put("status", state.toString());
         metadata.put("name", name);
         metadata.put("size", size);
