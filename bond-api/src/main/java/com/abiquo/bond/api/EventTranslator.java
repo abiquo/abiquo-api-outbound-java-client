@@ -1,8 +1,22 @@
 /**
- * Copyright (C) 2008 - Abiquo Holdings S.L. All rights reserved.
+ * The Abiquo Platform
+ * Cloud management application for hybrid clouds
+ * Copyright (C) 2008 - Abiquo Holdings S.L.
  *
- * Please see /opt/abiquo/tomcat/webapps/legal/ on Abiquo server
- * or contact contact@abiquo.com for licensing information.
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU LESSER GENERAL PUBLIC
+ * LICENSE as published by the Free Software Foundation under
+ * version 3 of the License
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * LESSER GENERAL PUBLIC LICENSE v.3 for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 package com.abiquo.bond.api;
 
@@ -26,6 +40,7 @@ import com.abiquo.bond.api.event.VirtualMachineEvent;
 import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.event.model.Event;
 import com.abiquo.event.model.details.EventDetails;
+import com.abiquo.model.rest.RESTLink;
 import com.abiquo.server.core.cloud.VirtualMachineDto;
 import com.google.common.base.Optional;
 
@@ -40,11 +55,11 @@ import com.google.common.base.Optional;
  */
 public class EventTranslator
 {
-    private final Logger logger = LoggerFactory.getLogger(EventTranslator.class);
+    private final static Logger logger = LoggerFactory.getLogger(EventTranslator.class);
 
     private ResourceExpander expander;
 
-    private String currUserEditLink;
+    private RESTLink currUserEditLink;
 
     private Map<String, String> startActions = new HashMap<>();
 
@@ -56,7 +71,7 @@ public class EventTranslator
      * @param password User's password
      */
     public EventTranslator(final String server, final String user, final String password,
-        final String currUserEditLink)
+        final RESTLink currUserEditLink)
     {
         expander = new ResourceExpander(server, user, password);
         this.currUserEditLink = currUserEditLink;
@@ -88,7 +103,7 @@ public class EventTranslator
             {
                 // Updating the backup results causes a new backup event to be generated, so we need
                 // to ignore any events caused by the current user.
-                if (!currUserEditLink.endsWith(event.getUser().toLowerCase()))
+                if (!currUserEditLink.getHref().endsWith(event.getUser().toLowerCase()))
                 {
                     VirtualMachineDto vmdetails = getVM(event);
                     apievent = new BackupVMEvent(event, vmdetails);

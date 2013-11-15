@@ -1,8 +1,22 @@
 /**
- * Copyright (C) 2008 - Abiquo Holdings S.L. All rights reserved.
+ * The Abiquo Platform
+ * Cloud management application for hybrid clouds
+ * Copyright (C) 2008 - Abiquo Holdings S.L.
  *
- * Please see /opt/abiquo/tomcat/webapps/legal/ on Abiquo server
- * or contact contact@abiquo.com for licensing information.
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU LESSER GENERAL PUBLIC
+ * LICENSE as published by the Free Software Foundation under
+ * version 3 of the License
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * LESSER GENERAL PUBLIC LICENSE v.3 for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 package com.abiquo.bond.api.connector;
 
@@ -23,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import com.abiquo.bond.api.CommsHandler;
 import com.abiquo.bond.api.MConnector;
+import com.abiquo.bond.api.OutboundAPIClientException;
 import com.abiquo.bond.api.Transport;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -41,7 +56,7 @@ import com.ning.http.client.Realm;
  */
 public class WAsyncConnector implements MConnector
 {
-    final Logger logger = LoggerFactory.getLogger(WAsyncConnector.class);
+    private final static Logger logger = LoggerFactory.getLogger(WAsyncConnector.class);
 
     private final CommsHandler msghandler;
 
@@ -59,9 +74,12 @@ public class WAsyncConnector implements MConnector
      * connection has been successfully established and so the AsyncHttpClientConfig throws a
      * timeout exception after 60 seconds. To get around this until the problem is fixed, we set the
      * connection and idle timeouts to -1, meaning no timeout.
+     * 
+     * @throws OutboundAPIClientException
      */
     @Override
     public void connect(final String server, final String user, final String password)
+        throws OutboundAPIClientException
     {
         AsyncHttpClientConfig.Builder ccBuilder = new AsyncHttpClientConfig.Builder();
         ccBuilder.setRequestTimeoutInMs(-1);
@@ -165,7 +183,7 @@ public class WAsyncConnector implements MConnector
                 }
                 catch (IllegalArgumentException iae)
                 {
-                    // Unknown transport type
+                    logger.error("Server comms: Unsupported transport type {}.", t);
                 }
             }
         });
@@ -175,8 +193,9 @@ public class WAsyncConnector implements MConnector
         }
         catch (IOException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Opening connection to Outbound API Server failed", e);
+            throw new OutboundAPIClientException("Opening connection to Outbound API Server failed",
+                e);
         }
     }
 

@@ -1,8 +1,22 @@
 /**
- * Copyright (C) 2008 - Abiquo Holdings S.L. All rights reserved.
+ * The Abiquo Platform
+ * Cloud management application for hybrid clouds
+ * Copyright (C) 2008 - Abiquo Holdings S.L.
  *
- * Please see /opt/abiquo/tomcat/webapps/legal/ on Abiquo server
- * or contact contact@abiquo.com for licensing information.
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU LESSER GENERAL PUBLIC
+ * LICENSE as published by the Free Software Foundation under
+ * version 3 of the License
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * LESSER GENERAL PUBLIC LICENSE v.3 for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 package com.abiquo.bond.api;
 
@@ -16,6 +30,9 @@ import java.util.Map;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.abiquo.bond.api.event.APIEvent;
 import com.abiquo.bond.api.event.BackupVMEvent;
@@ -38,6 +55,8 @@ import com.google.common.base.Optional;
  */
 public class EventStore extends APIConnection
 {
+    private final static Logger logger = LoggerFactory.getLogger(EventStore.class);
+
     private NameToVMLinks mapNameToVMLinks;
 
     private WebTarget targetEventBase;
@@ -62,27 +81,24 @@ public class EventStore extends APIConnection
      *            request associated data
      */
     public EventStore(final String server, final String user, final String password,
-        final String currUserEditLink, final NameToVMLinks mapNameToVMLinks)
+        final RESTLink currUserEditLink, final NameToVMLinks mapNameToVMLinks)
     {
         super(server, user, password);
         targetEventBase = targetAPIBase.path("events");
-        int idxUserId = currUserEditLink.lastIndexOf('/');
-        if (idxUserId >= 0)
+        currUserId = currUserEditLink.getId();
+        logger.debug("Current User ID: {}", currUserId);
+        String href = currUserEditLink.getHref();
+        String startMarker = "/enterprises/";
+        int idxEnterpriseIdStart = href.lastIndexOf(startMarker);
+        if (idxEnterpriseIdStart >= 0)
         {
-            currUserId = Integer.parseInt(currUserEditLink.substring(idxUserId + 1));
-            logger.debug("Current User ID: {}", currUserId);
-            int idxEnterpriseIdEnd = currUserEditLink.lastIndexOf('/', idxUserId - 1);
+            idxEnterpriseIdStart += startMarker.length();
+            int idxEnterpriseIdEnd = href.lastIndexOf("/users/");
             if (idxEnterpriseIdEnd >= 0)
             {
-                int idxEnterpriseIdStart =
-                    currUserEditLink.lastIndexOf('/', idxEnterpriseIdEnd - 1);
-                if (idxEnterpriseIdStart >= 0)
-                {
-                    currUserEnterpriseId =
-                        Integer.parseInt(currUserEditLink.substring(idxEnterpriseIdStart + 1,
-                            idxEnterpriseIdEnd));
-                    logger.debug("Current User Enterprise ID: {}", currUserEnterpriseId);
-                }
+                String entid = href.substring(idxEnterpriseIdStart, idxEnterpriseIdEnd);
+                currUserEnterpriseId = Integer.parseInt(entid);
+                logger.debug("Current User Enterprise ID: {}", currUserEnterpriseId);
             }
         }
         this.mapNameToVMLinks = mapNameToVMLinks;
@@ -162,18 +178,13 @@ public class EventStore extends APIConnection
                 }
 
                 moreevents = false;
-                List<RESTLink> links = resourceObject.getLinks();
-                for (RESTLink link : links)
+                RESTLink nextlink = resourceObject.searchLink("next");
+                if (nextlink != null)
                 {
-                    if (link.getRel().equalsIgnoreCase("next"))
-                    {
-                        // Add the 'asc' and 'datefrom' parameters to the link as they are not
-                        // currently added automatically.
-                        targetVMsOnly =
-                            client.target(link.getHref()).queryParam("asc", "true")
-                                .queryParam("datefrom", limitdate);
-                        moreevents = true;
-                    }
+                    targetVMsOnly =
+                        client.target(nextlink.getHref()).queryParam("asc", "true")
+                            .queryParam("datefrom", limitdate);
+                    moreevents = true;
                 }
             }
             else
@@ -226,8 +237,11 @@ public class EventStore extends APIConnection
             Optional< ? extends VirtualMachineEvent> optvmevent = Optional.absent();
             if (action.equals("VIRTUAL_MACHINE_METADATA_MODIFIED"))
             {
-                if (currUserId != event.getIdUser()
-                    && currUserEnterpriseId != event.getIdEnterprise())
+                Integer eventUserId = event.getIdUser();
+                Integer eventEnterpriseId = event.getIdEnterprise();
+
+                if (eventUserId == null || eventEnterpriseId == null || currUserId != eventUserId
+                    && currUserEnterpriseId != eventEnterpriseId)
                 {
                     optvmevent = createBackupEvent(event);
                 }

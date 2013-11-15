@@ -1,12 +1,24 @@
 /**
- * Copyright (C) 2008 - Abiquo Holdings S.L. All rights reserved.
+ * The Abiquo Platform
+ * Cloud management application for hybrid clouds
+ * Copyright (C) 2008 - Abiquo Holdings S.L.
  *
- * Please see /opt/abiquo/tomcat/webapps/legal/ on Abiquo server
- * or contact contact@abiquo.com for licensing information.
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU LESSER GENERAL PUBLIC
+ * LICENSE as published by the Free Software Foundation under
+ * version 3 of the License
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * LESSER GENERAL PUBLIC LICENSE v.3 for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 package com.abiquo.bond.api;
-
-import java.util.List;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -39,7 +51,7 @@ import com.abiquo.server.core.enterprise.UserDto;
  */
 public class APIConnection
 {
-    final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+    private final static Logger logger = LoggerFactory.getLogger(APIConnection.class);
 
     protected WebTarget targetAPIBase;
 
@@ -64,7 +76,7 @@ public class APIConnection
         client = builder.build();
         client.register(new HttpBasicAuthFilter(user, password));
         client.register(JacksonFeature.class);
-        logger.debug("Connecting to: {}", "http://" + server + "/api");
+        logger.debug("Connecting to: http://{}/api", server);
         targetAPIBase = client.target("http://" + server + "/api");
     }
 
@@ -117,7 +129,7 @@ public class APIConnection
      * @throws PluginHTTPException if the request fails for any reason
      * @throws PluginException if the response is missing the required link
      */
-    String getCurrentUserLink() throws PluginException
+    RESTLink getCurrentUserLink() throws PluginException
     {
         WebTarget targetUser = targetAPIBase.path("login");
         Invocation.Builder invocationBuilder = targetUser.request(UserDto.MEDIA_TYPE);
@@ -126,14 +138,11 @@ public class APIConnection
         if (status == 200)
         {
             UserDto resourceUser = response.readEntity(UserDto.class);
-            List<RESTLink> userlinks = resourceUser.getLinks();
-            for (RESTLink userlink : userlinks)
+            RESTLink userlink = resourceUser.getEditLink();
+            if (userlink != null)
             {
-                if (userlink.getRel().equalsIgnoreCase("edit"))
-                {
-                    logger.debug("Current user url: {}", userlink.getHref());
-                    return userlink.getHref();
-                }
+                logger.debug("Current user url: {}", userlink.getHref());
+                return userlink;
             }
             throw new PluginException("Error getting current user URI: 'edit' link not found");
         }
