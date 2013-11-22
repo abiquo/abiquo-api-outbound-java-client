@@ -218,19 +218,16 @@ public class SimpleClient extends JFrame
                     }
                 }
 
-                client.startPluginThreads();
-                client.run();
-
-                // Start a thread to wait for the plugins to complete
-                Thread waiterThread = new Thread(new WaitForPlugins(client));
-                waiterThread.start();
-            }
-            else
-            {
-                for (Throwable t : failures)
+                client.startPlugins();
+                failures = client.getLoadFailures();
+                if (failures.isEmpty())
                 {
-                    System.out.println("Plugin load failure: " + t.getMessage());
+                    client.run();
                 }
+            }
+            for (Throwable t : failures)
+            {
+                System.out.println("Plugin failure: " + t.getMessage());
             }
         }
         catch (Throwable e)
@@ -304,21 +301,4 @@ class DateTextListener implements DocumentListener
     {
         textchanged = true;
     }
-}
-
-class WaitForPlugins implements Runnable
-{
-    private OutboundAPIClient client;
-
-    public WaitForPlugins(final OutboundAPIClient client)
-    {
-        this.client = client;
-    }
-
-    @Override
-    public void run()
-    {
-        client.waitForPlugins();
-    }
-
 }

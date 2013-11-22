@@ -75,11 +75,6 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      */
     private Set<PluginInterface> handlers;
 
-    /*
-     * References to the threads the plugins are running in
-     */
-    private List<Thread> pluginThreads = new ArrayList<>();
-
     private Set<BackupPluginInterface> handlersWithResponses = new HashSet<>();
 
     private List<Throwable> failures = new ArrayList<>();
@@ -98,11 +93,11 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     private RESTLink currUserEditLink;
 
-    private Date lastEventTimestamp;
-
     private WrapperNotification handlerNotifications;
 
     private ResponsesHandler responses;
+
+    EventDispatcher eventDispatcher;
 
     /**
      * The purpose of the constructor is to identify and load plugins.
@@ -177,6 +172,8 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
         handlers = Collections.unmodifiableSet(plugins);
 
+        eventDispatcher = new EventDispatcher(handlers, 1);
+
         // Initialise the class that will fecth events from the permanent store that may have been
         // missed since the last time the client was run
         eventstore =
@@ -234,13 +231,13 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      */
     public Date getLastEventTimestamp()
     {
-        return lastEventTimestamp;
+        return eventDispatcher.getLastEventTimestamp();
     }
 
     /**
-     * Start each successfully loaded plugin in a separate thread
+     * Start each successfully loaded plugin
      */
-    public void startPluginThreads()
+    public void startPlugins()
     {
         translator =
             new EventTranslator(config.getMServer(),
@@ -253,30 +250,34 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
             responses.addBackupPlugin(plugin);
         }
 
+        failures.clear();
         for (PluginInterface handler : handlers)
         {
-            Thread t = new Thread(handler, handler.getThreadName());
-            pluginThreads.add(t);
-            t.start();
+            try
+            {
+                handler.startup();
+            }
+            catch (PluginException e)
+            {
+                logger.error("Startup of plugin failed", e);
+                failures.add(e);
+            }
         }
     }
 
     /**
      * Wait for all the plugin threads to complete
      */
-    public void waitForPlugins()
+    public boolean pluginsAreStillRunning()
     {
-        for (Thread plugin : pluginThreads)
+        for (final PluginInterface plugin : handlers)
         {
-            try
+            if (plugin.isRunning())
             {
-                plugin.join();
-            }
-            catch (InterruptedException e)
-            {
-                logger.warn("Thread {} was interrupted", plugin.getName());
+                return true;
             }
         }
+        return false;
     }
 
     /**
@@ -370,7 +371,10 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
             plugin.cancel();
         }
         // Wait for the plugins to stop
-        waitForPlugins();
+        while (pluginsAreStillRunning())
+        {
+            ;
+        }
 
         // Disconnect from the Outbound API
         if (mConnector != null)
@@ -382,13 +386,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
     @Override
     public void handleMessage(final APIEvent apievent)
     {
-        for (PluginInterface plugin : handlers)
-        {
-            if (plugin.handlesEventType(apievent.getClass()))
-            {
-                plugin.processEvent(apievent);
-            }
-        }
+        eventDispatcher.dispatchEvent(apievent);
     }
 
     @Override
@@ -414,7 +412,6 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
                 else
                 {
                     handleMessage(apievent);
-                    lastEventTimestamp = apievent.getTimestamp();
                 }
             }
         }

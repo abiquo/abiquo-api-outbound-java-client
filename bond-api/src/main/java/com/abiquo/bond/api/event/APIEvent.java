@@ -32,7 +32,7 @@ import com.abiquo.server.core.event.EventDto;
  * Generic class for representing events received from the M server or event store that don't
  * currently have a specific class to represent them.
  */
-public class APIEvent
+public class APIEvent implements Comparable<APIEvent>
 {
     private final static Logger logger = LoggerFactory.getLogger(APIEvent.class);
 
@@ -89,5 +89,11 @@ public class APIEvent
         StringBuilder sb =
             new StringBuilder(this.getClass().getName()).append(" ts:").append(timestamp);
         return sb.toString();
+    }
+
+    @Override
+    public int compareTo(final APIEvent other)
+    {
+        return timestamp.compareTo(other.timestamp);
     }
 }

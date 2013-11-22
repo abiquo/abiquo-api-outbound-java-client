@@ -21,13 +21,14 @@
 package com.abiquo.bond.api.plugin;
 
 import com.abiquo.bond.api.event.APIEvent;
+import com.abiquo.bond.api.event.APIEventResult;
 
 /**
  * This is the interface that any plugin for the sample Outbound API Client should implement. Users
  * can choose to implement this directly or extend the
  * {@link com.abiquo.bond.api.plugin.AbstractPlugin} class.
  */
-public interface PluginInterface extends Runnable
+public interface PluginInterface
 {
     /**
      * Process an event received from the M server. Ideally this should run as quickly as possible
@@ -37,8 +38,9 @@ public interface PluginInterface extends Runnable
      * can also be used to potentially speed processing.
      * 
      * @param event
+     * @return
      */
-    void processEvent(APIEvent event);
+    APIEventResult processEvent(APIEvent event);
 
     /**
      * Checks whether a plugin wants to handle a specific type of event. This method should be used
@@ -76,4 +78,9 @@ public interface PluginInterface extends Runnable
      * Cancels the plugin
      */
     public void cancel();
+
+    /**
+     * Cancels the plugin
+     */
+    public boolean isRunning();
 }

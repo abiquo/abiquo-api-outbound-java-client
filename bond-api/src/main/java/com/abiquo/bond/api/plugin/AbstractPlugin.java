@@ -25,8 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +35,8 @@ import com.abiquo.bond.api.annotations.HandleBackupVMEvent;
 import com.abiquo.bond.api.annotations.HandleDeployVMEvent;
 import com.abiquo.bond.api.annotations.HandleUndeployVMEvent;
 import com.abiquo.bond.api.event.APIEvent;
+import com.abiquo.bond.api.event.APIEventResult;
+import com.abiquo.bond.api.event.APIEventResultState;
 import com.abiquo.bond.api.event.BackupVMEvent;
 import com.abiquo.bond.api.event.DeployVMEvent;
 import com.abiquo.bond.api.event.UndeployVMEvent;
@@ -71,8 +71,6 @@ public abstract class AbstractPlugin implements PluginInterface
     }
 
     private Map<Class< ? extends APIEvent>, Method> mapEventToMethod = new HashMap<>();
-
-    private LinkedBlockingQueue<APIEvent> eventqueue = new LinkedBlockingQueue<>();
 
     @SuppressWarnings("unchecked")
     public AbstractPlugin() throws PluginException
@@ -162,67 +160,49 @@ public abstract class AbstractPlugin implements PluginInterface
     }
 
     /**
-     * Takes events from the queue and uses reflection to call the correct method to process them.
+     * Works out which method to use to process the plugin and then executes that method..
+     * 
+     * @return the result of the event processing
      */
     @Override
-    public void run()
+    public APIEventResult processEvent(final APIEvent event)
     {
-        try
-        {
-            logger.debug("Starting up {}", this.getName());
-            startup();
-            logger.debug("Start up of {} complete", this.getName());
-        }
-        catch (PluginException e1)
-        {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        while (!cancelled)
-        {
-            try
-            {
-                APIEvent event = eventqueue.poll(10, TimeUnit.SECONDS);
-                if (!cancelled && event != null)
-                {
-                    Method eventhandler = mapEventToMethod.get(event.getClass());
-                    logger.debug("Processing {} with method {}", event.toString(),
-                        eventhandler.getName());
-                    try
-                    {
-                        eventhandler.invoke(this, new Object[] {event});
-                    }
-                    catch (IllegalAccessException | IllegalArgumentException
-                        | InvocationTargetException e)
-                    {
-                        notifyWrapper("Plugin failed to process event " + event.toString(), e);
-                    }
-                }
-            }
-            catch (InterruptedException e)
-            {
-                logger.info("{} event queue interrupted", this.getName());
-            }
-        }
-        logger.info("{} was cancelled", this.getName());
-    }
-
-    /**
-     * Adds an event to the queue for processing in the
-     * {@link com.abiquo.bond.api.plugin.AbstractPlugin#run} method.
-     */
-    @Override
-    public void processEvent(final APIEvent event)
-    {
+        APIEventResult result;
         if (mapEventToMethod.containsKey(event.getClass()))
         {
             logger.debug("Adding {} to queue", event.toString());
-            eventqueue.offer(event);
+            Method eventhandler = mapEventToMethod.get(event.getClass());
+            logger.debug("Processing {} with method {}", event.toString(), eventhandler.getName());
+            try
+            {
+                eventhandler.invoke(this, new Object[] {event});
+                result = new APIEventResult(APIEventResultState.COMPLETE, event);
+            }
+            catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+            {
+                notifyWrapper(
+                    "Plugin failed to invoke correct method to process event " + event.toString(),
+                    e);
+                result =
+                    new APIEventResult(APIEventResultState.FAILED,
+                        event,
+                        "Plugin failed to invoke correct method to process event",
+                        e);
+            }
+            catch (Throwable t)
+            {
+                result =
+                    new APIEventResult(APIEventResultState.FAILED,
+                        event,
+                        "Error processing event",
+                        t);
+            }
         }
         else
         {
-            // Received event for which we had not registered
+            result = new APIEventResult(APIEventResultState.EVENTTYPENOTSUPPORTED, event);
         }
+        return result;
     }
 
     @Override
@@ -235,5 +215,11 @@ public abstract class AbstractPlugin implements PluginInterface
     public void cancel()
     {
         this.cancelled = true;
+    }
+
+    @Override
+    public boolean isRunning()
+    {
+        return !cancelled;
     }
 }
