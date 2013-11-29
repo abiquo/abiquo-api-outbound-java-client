@@ -159,6 +159,11 @@ public class SimpleClient extends JFrame
     private void jButton2MouseClicked(final MouseEvent evt)
     {
         client.close();
+        Date lastEventDate = client.getLastEventTimestamp();
+        if (lastEventDate != null)
+        {
+            tfStartDate.setText(dateformat.format(lastEventDate));
+        }
     }
 
     private void jButton1MouseClicked(final MouseEvent evt)

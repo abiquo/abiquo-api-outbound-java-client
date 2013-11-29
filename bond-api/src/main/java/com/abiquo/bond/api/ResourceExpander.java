@@ -47,7 +47,8 @@ public class ResourceExpander extends APIConnection
     }
 
     private SingleResourceTransportDto expandResource(final String resource, final String type,
-        final Class< ? extends SingleResourceTransportDto> resourceClass) throws PluginException
+        final Class< ? extends SingleResourceTransportDto> resourceClass)
+        throws OutboundAPIClientHTTPException
     {
         WebTarget targetResource = targetAPIBase.path(resource);
         Invocation.Builder invocationBuilder = targetResource.request(type);
@@ -62,7 +63,7 @@ public class ResourceExpander extends APIConnection
         {
             String error = response.readEntity(String.class);
             logger.debug(error);
-            throw new PluginException(error);
+            throw new OutboundAPIClientHTTPException(error, targetResource.getUri(), status);
         }
     }
 
@@ -90,7 +91,7 @@ public class ResourceExpander extends APIConnection
      * @return an instance of the UserDto class created from the resource String
      * @throws PluginException
      */
-    public UserDto expandUserResource(final String resource) throws PluginException
+    public UserDto expandUserResource(final String resource) throws OutboundAPIClientHTTPException
     {
         UserDto user = (UserDto) expandResource(resource, UserDto.MEDIA_TYPE_JSON, UserDto.class);
         logger.debug("UserDto: id:{} name:{}", user.getId(), user.getName());
@@ -104,7 +105,8 @@ public class ResourceExpander extends APIConnection
      * @return an instance of the EnterpriseDto class created from the resource String
      * @throws PluginException
      */
-    public EnterpriseDto expandEnterpriseResource(final String resource) throws PluginException
+    public EnterpriseDto expandEnterpriseResource(final String resource)
+        throws OutboundAPIClientHTTPException
     {
         EnterpriseDto enterprise =
             (EnterpriseDto) expandResource(resource, EnterpriseDto.MEDIA_TYPE_JSON,
@@ -120,7 +122,8 @@ public class ResourceExpander extends APIConnection
      * @return an instance of the VirtualMachineDto class created from the resource String
      * @throws PluginException
      */
-    public VirtualMachineDto expandVirtualMachine(final String resource) throws PluginException
+    public VirtualMachineDto expandVirtualMachine(final String resource)
+        throws OutboundAPIClientHTTPException
     {
         VirtualMachineDto vm =
             (VirtualMachineDto) expandResource(resource, VirtualMachineDto.BASE_MEDIA_TYPE,

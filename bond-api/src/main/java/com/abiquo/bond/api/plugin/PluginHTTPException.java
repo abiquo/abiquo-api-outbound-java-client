@@ -22,11 +22,9 @@ package com.abiquo.bond.api.plugin;
 
 import java.net.URI;
 
-
 /**
  * Wrapper class for exceptions that occur within the plugins when communicating to HTTP servers.
  */
-
 @SuppressWarnings("serial")
 public class PluginHTTPException extends PluginException
 {

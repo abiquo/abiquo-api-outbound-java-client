@@ -25,8 +25,6 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.abiquo.bond.api.plugin.PluginException;
-
 /**
  * This class represents the configuration data required by the OutboundAPIClient class. An instance
  * of this class is passed to the OutboundAPIClient constructor. This is used instead of a
@@ -93,10 +91,10 @@ public class ConfigurationData
      * @param mserver name or ip address of the 'M' server
      * @param musername abiquo user with cloud administrator privileges
      * @param muserpassword user's password
-     * @throws PluginException if server name, user name and/or password are null.
+     * @throws OutboundAPIClientException if server name, user name and/or password are null.
      */
     public ConfigurationData(final String mserver, final String musername,
-        final String muserpassword) throws PluginException
+        final String muserpassword) throws OutboundAPIClientException
     {
         logger.debug("Constructor: server: {}, username: {}", mserver, musername);
         this.mserver = mserver;
@@ -105,7 +103,7 @@ public class ConfigurationData
 
         if (mserver == null || musername == null || muserpassword == null)
         {
-            throw new PluginException("The 'M' server name, user and password cannot be null.");
+            throw new OutboundAPIClientException("The 'M' server name, user and password cannot be null.");
         }
     }
 
@@ -113,9 +111,9 @@ public class ConfigurationData
      * Copy constructor.
      * 
      * @param original ConfigurationData instance to be copied
-     * @throws PluginException if server name, user name and/or password are not specified.
+     * @throws OutboundAPIClientException if server name, user name and/or password are not specified.
      */
-    public ConfigurationData(final ConfigurationData original) throws PluginException
+    public ConfigurationData(final ConfigurationData original) throws OutboundAPIClientException
     {
         logger
             .debug(
@@ -132,7 +130,7 @@ public class ConfigurationData
 
         if (mserver == null || musername == null || muserpassword == null)
         {
-            throw new PluginException("The 'M' server name, user and password must be specified in the configuration data.");
+            throw new OutboundAPIClientException("The 'M' server name, user and password must be specified in the configuration data.");
         }
     }
 
