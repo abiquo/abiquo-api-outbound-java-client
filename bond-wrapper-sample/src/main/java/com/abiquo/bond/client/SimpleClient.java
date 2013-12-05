@@ -53,8 +53,6 @@ import com.abiquo.bond.api.OutboundAPIClient;
 import com.abiquo.bond.api.plugin.PluginInterface;
 import com.abiquo.bond.plugins.AllEvents;
 import com.abiquo.bond.plugins.BackupEvents;
-import com.abiquo.bond.plugins.veeam.VEEAMBackup;
-import com.abiquo.bond.plugins.veeam.VEEAMConfiguration;
 
 @SuppressWarnings("serial")
 public class SimpleClient extends JFrame
@@ -198,14 +196,6 @@ public class SimpleClient extends JFrame
                 // Any configuration of the plugins should be done at this point
                 for (PluginInterface plugin : plugins)
                 {
-                    // Delete or comment out this block if you don't have access to the VEEAM plugin
-                    if (plugin instanceof VEEAMBackup)
-                    {
-                        VEEAMConfiguration veeamcfg =
-                            new VEEAMConfiguration(new File("veeam.properties"));
-                        ((VEEAMBackup) plugin).configure(veeamcfg);
-                    }
-
                     // The sample plugins. The configure methods simply print out a message to say
                     // they have been called.
                     if (plugin instanceof AllEvents)
