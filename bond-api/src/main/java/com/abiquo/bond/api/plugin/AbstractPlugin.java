@@ -178,7 +178,7 @@ public abstract class AbstractPlugin implements PluginInterface
                 eventhandler.invoke(this, new Object[] {event});
                 result = new APIEventResult(APIEventResultState.COMPLETE, event);
             }
-            catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+            catch (IllegalAccessException | IllegalArgumentException e)
             {
                 notifyWrapper(
                     "Plugin failed to invoke correct method to process event " + event.toString(),
@@ -187,6 +187,15 @@ public abstract class AbstractPlugin implements PluginInterface
                     new APIEventResult(APIEventResultState.FAILED,
                         event,
                         "Plugin failed to invoke correct method to process event",
+                        e);
+            }
+            catch (InvocationTargetException e)
+            {
+                notifyWrapper("Event handler method threw an exception: " + event.toString(), e);
+                result =
+                    new APIEventResult(APIEventResultState.FAILED,
+                        event,
+                        "Event handler method threw an exception",
                         e);
             }
             catch (Throwable t)

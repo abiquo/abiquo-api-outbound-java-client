@@ -196,7 +196,7 @@ public class EventStore extends APIConnection
         }
     }
 
-    private Optional<BackupVMEvent> createBackupEvent(final EventDto event)
+    private Optional<MetadataDto> getMetaData(final EventDto event)
     {
         Optional<RESTLink> optMetadataLink =
             mapNameToVMLinks.getLink(event.getVirtualMachine(), NameToVMLinks.VM_LINK_METADATA);
@@ -210,8 +210,7 @@ public class EventStore extends APIConnection
             int statusMeta = responseMeta.getStatus();
             if (statusMeta == 200)
             {
-                MetadataDto resourceObjectMeta = responseMeta.readEntity(MetadataDto.class);
-                return Optional.of(new BackupVMEvent(event, resourceObjectMeta));
+                return Optional.of(responseMeta.readEntity(MetadataDto.class));
             }
             else
             {
@@ -235,6 +234,7 @@ public class EventStore extends APIConnection
         {
             String action = event.getActionPerformed().toUpperCase();
             Optional< ? extends VirtualMachineEvent> optvmevent = Optional.absent();
+            Optional<MetadataDto> optMetaData = getMetaData(event);
             if (action.equals("VIRTUAL_MACHINE_METADATA_MODIFIED"))
             {
                 Integer eventUserId = event.getIdUser();
@@ -243,7 +243,7 @@ public class EventStore extends APIConnection
                 if (eventUserId == null || eventEnterpriseId == null || currUserId != eventUserId
                     && currUserEnterpriseId != eventEnterpriseId)
                 {
-                    optvmevent = createBackupEvent(event);
+                    optvmevent = Optional.of(new BackupVMEvent(event, optMetaData));
                 }
                 else
                 {
@@ -272,7 +272,7 @@ public class EventStore extends APIConnection
                 }
                 else
                 {
-                    optvmevent = Optional.of(new DeployVMEvent(event));
+                    optvmevent = Optional.of(new DeployVMEvent(event, optMetaData));
                 }
             }
             else if (action.equals("VIRTUAL_MACHINE_UNDEPLOY_FINISH"))
@@ -281,7 +281,7 @@ public class EventStore extends APIConnection
             }
             else
             {
-                optvmevent = Optional.of(new VirtualMachineEvent(event));
+                optvmevent = Optional.of(new VirtualMachineEvent(event, optMetaData));
             }
             return optvmevent;
         }

@@ -129,6 +129,12 @@ public class BackupEventConfiguration
         }
     }
 
+    public boolean isConfigured()
+    {
+        return hourly != null || daily != null || weekly_planned != null || monthly != null
+            || definedhour != null;
+    }
+
     public Optional<Integer> getHourlyHour()
     {
         if (hourly != null)
@@ -201,10 +207,6 @@ public class BackupEventConfiguration
             super(settings);
             String hoursetting = (String) settings.get(VMMetadata.TIME);
             hour = Integer.parseInt(hoursetting);
-            if (hour < 0 || hour > 23)
-            {
-                throw new NumberFormatException("Hour value is out of range.");
-            }
         }
 
         public int getHour()
