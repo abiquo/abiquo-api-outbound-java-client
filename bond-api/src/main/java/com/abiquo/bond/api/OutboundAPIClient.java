@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.abiquo.bond.api.EventDispatcher.ShutdownLevel;
 import com.abiquo.bond.api.event.APIEvent;
 import com.abiquo.bond.api.plugin.BackupPluginInterface;
 import com.abiquo.bond.api.plugin.PluginException;
@@ -97,16 +98,18 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     private ResponsesHandler responses;
 
-    EventDispatcher eventDispatcher;
+    private EventDispatcher eventDispatcher;
+
+    private boolean shutdown = false;
 
     /**
      * The purpose of the constructor is to identify and load plugins.
      * 
      * @param data Configuration data for the client. See {@link ConfigurationData} for details of
      *            what data is required.
-     * @throws PluginException
+     * @throws OutboundAPIClientException
      */
-    public OutboundAPIClient(final ConfigurationData data) throws PluginException
+    public OutboundAPIClient(final ConfigurationData data) throws OutboundAPIClientException
     {
         this.config = new ConfigurationData(data);
 
@@ -268,16 +271,9 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
     /**
      * Wait for all the plugin threads to complete
      */
-    public boolean pluginsAreStillRunning()
+    public boolean isRunning()
     {
-        for (final PluginInterface plugin : handlers)
-        {
-            if (plugin.isRunning())
-            {
-                return true;
-            }
-        }
-        return false;
+        return !shutdown;
     }
 
     /**
@@ -370,17 +366,16 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
         {
             plugin.cancel();
         }
+
         // Wait for the plugins to stop
-        while (pluginsAreStillRunning())
-        {
-            ;
-        }
+        eventDispatcher.shutdown(ShutdownLevel.AWAIT_RUNNING_TASKS);
 
         // Disconnect from the Outbound API
         if (mConnector != null)
         {
             mConnector.disconnect();
         }
+        shutdown = true;
     }
 
     @Override
@@ -415,7 +410,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
                 }
             }
         }
-        catch (IOException | PluginException e)
+        catch (IOException | OutboundAPIClientException e)
         {
             logger.warn("Exception whilst translating message from outbound api", e);
             notifyWrapper("Exception whilst translating message from outbound api", e);

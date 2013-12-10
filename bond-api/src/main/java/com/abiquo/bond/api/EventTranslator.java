@@ -37,7 +37,6 @@ import com.abiquo.bond.api.event.BackupVMEvent;
 import com.abiquo.bond.api.event.DeployVMEvent;
 import com.abiquo.bond.api.event.UndeployVMEvent;
 import com.abiquo.bond.api.event.VirtualMachineEvent;
-import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.event.model.Event;
 import com.abiquo.event.model.details.EventDetails;
 import com.abiquo.model.rest.RESTLink;
@@ -91,9 +90,9 @@ public class EventTranslator
      * 
      * @param event received from the M server
      * @return An APIEvent or subclass instance populated with extra data fetched using the REST API
-     * @throws PluginException
+     * @throws OutboundAPIClientException
      */
-    public Optional<APIEvent> translate(final Event event) throws PluginException
+    public Optional<APIEvent> translate(final Event event) throws OutboundAPIClientException
     {
         APIEvent apievent = null;
         if (event.getType().equalsIgnoreCase("VIRTUAL_MACHINE"))
@@ -150,7 +149,7 @@ public class EventTranslator
         return Optional.fromNullable(apievent);
     }
 
-    private VirtualMachineDto getVM(final Event event) throws PluginException
+    private VirtualMachineDto getVM(final Event event) throws OutboundAPIClientException
     {
         Optional<String> optVMId = event.getEntityIdentifier();
         VirtualMachineDto vmdetails = null;
@@ -173,9 +172,9 @@ public class EventTranslator
                 name = vmdto.getName();
             }
         }
-        catch (PluginException e)
+        catch (OutboundAPIClientException e)
         {
-            // TODO Auto-generated catch block
+            logger.warn("Error retrieving virtual machine name", e);
         }
         if (name == null)
         {
