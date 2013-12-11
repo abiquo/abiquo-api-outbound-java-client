@@ -27,7 +27,6 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.model.rest.RESTLink;
 import com.abiquo.model.transport.SingleResourceTransportDto;
 import com.abiquo.server.core.cloud.VirtualMachineDto;
@@ -89,7 +88,7 @@ public class ResourceExpander extends APIConnection
      * 
      * @param resource String containing the data to be converted
      * @return an instance of the UserDto class created from the resource String
-     * @throws PluginException
+     * @throws OutboundAPIClientHTTPException
      */
     public UserDto expandUserResource(final String resource) throws OutboundAPIClientHTTPException
     {
@@ -103,7 +102,7 @@ public class ResourceExpander extends APIConnection
      * 
      * @param resource String containing the data to be converted
      * @return an instance of the EnterpriseDto class created from the resource String
-     * @throws PluginException
+     * @throws OutboundAPIClientHTTPException
      */
     public EnterpriseDto expandEnterpriseResource(final String resource)
         throws OutboundAPIClientHTTPException
@@ -120,7 +119,7 @@ public class ResourceExpander extends APIConnection
      * 
      * @param resource String containing the data to be converted
      * @return an instance of the VirtualMachineDto class created from the resource String
-     * @throws PluginException
+     * @throws OutboundAPIClientHTTPException
      */
     public VirtualMachineDto expandVirtualMachine(final String resource)
         throws OutboundAPIClientHTTPException

@@ -16,8 +16,8 @@
         <jdk.version>1.7</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Abiquo platform components (server, remote services) -->
-        <apimodel.version>2.6.0</apimodel.version>
-        <eventmodel.version>1.0.0</eventmodel.version>
+        <apimodel.version>2.6.2</apimodel.version>
+        <eventmodel.version>1.0.1</eventmodel.version>
         <!-- Dependences versions -->
         <junit.version>4.7</junit.version>
         <wasync.version>1.1.0</wasync.version>

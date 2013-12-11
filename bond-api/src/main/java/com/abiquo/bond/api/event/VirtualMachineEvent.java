@@ -1,13 +1,22 @@
 /**
- * The Abiquo Platform Cloud management application for hybrid clouds Copyright (C) 2008 - Abiquo
- * Holdings S.L. This application is free software; you can redistribute it and/or modify it under
- * the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by the Free Software Foundation
- * under version 3 of the License This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU LESSER GENERAL PUBLIC LICENSE v.3 for more details. You should
- * have received a copy of the GNU Lesser General Public License along with this library; if not,
- * write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
- * USA.
+ * The Abiquo Platform
+ * Cloud management application for hybrid clouds
+ * Copyright (C) 2008 - Abiquo Holdings S.L.
+ *
+ * This application is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU LESSER GENERAL PUBLIC
+ * LICENSE as published by the Free Software Foundation under
+ * version 3 of the License
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * LESSER GENERAL PUBLIC LICENSE v.3 for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 package com.abiquo.bond.api.event;
 
@@ -53,15 +62,11 @@ public class VirtualMachineEvent extends APIEvent
      * @param event the original event received from the M server. A reference to this is kept in
      *            case the plugin requires and extra data
      * @param vmdetails Details of the virtual machine
+     * @param vmdetails Details of the virtual machine requesting a backup
      */
     public VirtualMachineEvent(final Event event, final VirtualMachineDto vmdetails)
     {
-        super(event);
-        Map<String, String> details = getEventDetails(event);
-        vmname = details.get("VIRTUAL_MACHINE_NAME");
-        hypervisorname = details.get("MACHINE_NAME");
-        hypervisorip = details.get("HYPERVISOR_IP");
-        hypervisortype = details.get("HYPERVISOR_TYPE");
+        this(event);
         if (vmdetails != null)
         {
             if (vmname == null)
@@ -85,16 +90,10 @@ public class VirtualMachineEvent extends APIEvent
 
     public VirtualMachineEvent(final EventDto event, final Optional<MetadataDto> optMetaData)
     {
-        super(event);
-        vmname = event.getVirtualMachine();
-        hypervisorname = event.getPhysicalMachine();
+        this(event);
         MetadataDto vmdetails = optMetaData.orNull();
         if (vmdetails != null)
         {
-            if (vmname == null)
-            {
-                vmname = event.getVirtualMachine();
-            }
             Map<String, Object> metadata = vmdetails.getMetadata();
             extractBackupData(metadata);
         }
@@ -148,30 +147,34 @@ public class VirtualMachineEvent extends APIEvent
     @SuppressWarnings("unchecked")
     private void extractBackupData(final Map<String, Object> metadata)
     {
-        Map<String, Object> submetadata = (Map<String, Object>) metadata.get(VMMetadata.METADATA);
-        if (submetadata != null)
+        if (metadata != null)
         {
-            Map<String, Object> backupschedule =
-                (Map<String, Object>) submetadata.get(VMMetadata.BACKUP);
-            if (backupschedule != null)
+            Map<String, Object> submetadata =
+                (Map<String, Object>) metadata.get(VMMetadata.METADATA);
+            if (submetadata != null)
             {
-                Map<String, Object> configdata =
-                    (Map<String, Object>) backupschedule.get(VMMetadata.COMPLETE);
-                if (configdata != null)
+                Map<String, Object> backupschedule =
+                    (Map<String, Object>) submetadata.get(VMMetadata.BACKUP);
+                if (backupschedule != null)
                 {
-                    bcComplete = new BackupEventConfiguration(configdata);
+                    Map<String, Object> configdata =
+                        (Map<String, Object>) backupschedule.get(VMMetadata.COMPLETE);
+                    if (configdata != null)
+                    {
+                        bcComplete = new BackupEventConfiguration(configdata);
+                    }
+                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.FILESYSTEM);
+                    if (configdata != null)
+                    {
+                        bcSnapshot = new BackupEventConfiguration(configdata);
+                    }
+                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.SNAPSHOT);
+                    if (configdata != null)
+                    {
+                        bcFileSystem = new BackupEventConfiguration(configdata);
+                    }
+                    backupIsConfigured = true;
                 }
-                configdata = (Map<String, Object>) backupschedule.get(VMMetadata.FILESYSTEM);
-                if (configdata != null)
-                {
-                    bcSnapshot = new BackupEventConfiguration(configdata);
-                }
-                configdata = (Map<String, Object>) backupschedule.get(VMMetadata.SNAPSHOT);
-                if (configdata != null)
-                {
-                    bcFileSystem = new BackupEventConfiguration(configdata);
-                }
-                backupIsConfigured = true;
             }
         }
     }
