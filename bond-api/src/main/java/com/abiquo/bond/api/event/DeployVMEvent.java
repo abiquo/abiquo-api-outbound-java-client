@@ -21,21 +21,24 @@
 package com.abiquo.bond.api.event;
 
 import com.abiquo.event.model.Event;
+import com.abiquo.server.core.cloud.MetadataDto;
+import com.abiquo.server.core.cloud.VirtualMachineDto;
 import com.abiquo.server.core.event.EventDto;
+import com.google.common.base.Optional;
 
 /**
  * Class for representing virtual machine deployment events received from the M server
  */
 public class DeployVMEvent extends VirtualMachineEvent
 {
-    public DeployVMEvent(final Event event)
+    public DeployVMEvent(final Event event, final VirtualMachineDto vmdetails)
     {
-        super(event);
+        super(event, vmdetails);
     }
 
-    public DeployVMEvent(final EventDto event)
+    public DeployVMEvent(final EventDto event, final Optional<MetadataDto> optMetaData)
     {
-        super(event);
+        super(event, optMetaData);
     }
 
 }
