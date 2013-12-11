@@ -111,7 +111,8 @@ public class ConfigurationData
      * Copy constructor.
      * 
      * @param original ConfigurationData instance to be copied
-     * @throws OutboundAPIClientException if server name, user name and/or password are not specified.
+     * @throws OutboundAPIClientException if server name, user name and/or password are not
+     *             specified.
      */
     public ConfigurationData(final ConfigurationData original) throws OutboundAPIClientException
     {
