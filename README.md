@@ -1,6 +1,8 @@
 Abiquo Outbound API Client 
 ==========================
 
+[![Build Status](https://secure.travis-ci.org/abiquo/abiquo-api-outbound-java-client.png?branch=master)](http://travis-ci.org/#!/abiquo/abiquo-api-outbound-java-client/branch_summary)
+
 Version 2.6 of the Abiquo Cloud Platform introduced the Outbound API, an event stream that will allow customers and third-party software providers to integrate external systems such as backup software with the Abiquo platform. The event stream can be read using the standard Server Sent Events (SSE) protocol which means that clients can be written with any language that supports SSE. This repository contains examples of how the stream can be read and processed in various programming languages. Currently we have provided sample code for the following languages
    *	Java
 
