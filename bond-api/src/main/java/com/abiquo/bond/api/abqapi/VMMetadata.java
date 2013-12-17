@@ -82,6 +82,8 @@ public class VMMetadata
 
     public static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss Z";
 
+    public static final String DAY_FORMAT = "yyyy/MM/dd";
+
     public static final String CHEF = "chef";
 
     /**

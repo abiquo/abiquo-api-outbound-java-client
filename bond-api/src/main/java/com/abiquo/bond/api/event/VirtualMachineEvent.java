@@ -55,6 +55,8 @@ public class VirtualMachineEvent extends APIEvent
 
     private boolean backupIsConfigured = false;
 
+    private Map<VMBackupType, EnumSet<VMBackupConfiguration>> reqCfgs;
+
     /**
      * Extracts the name of the machine and the backup configuration data from the supplied
      * VirtualMachineDto instance
@@ -173,7 +175,23 @@ public class VirtualMachineEvent extends APIEvent
                     {
                         bcFileSystem = new BackupEventConfiguration(configdata);
                     }
+
                     backupIsConfigured = true;
+
+                    reqCfgs = new HashMap<>();
+                    if (bcComplete != null)
+                    {
+                        reqCfgs.put(VMBackupType.COMPLETE, getEnabledConfigurations(bcComplete));
+                    }
+                    if (bcSnapshot != null)
+                    {
+                        reqCfgs.put(VMBackupType.SNAPSHOT, getEnabledConfigurations(bcSnapshot));
+                    }
+                    if (bcFileSystem != null)
+                    {
+                        reqCfgs
+                            .put(VMBackupType.FILESYSTEM, getEnabledConfigurations(bcFileSystem));
+                    }
                 }
             }
         }
@@ -181,14 +199,14 @@ public class VirtualMachineEvent extends APIEvent
 
     public boolean backupIsConfigured()
     {
-        return backupIsConfigured(EnumSet.allOf(VMBACKUP_TYPES.class));
+        return backupIsConfigured(EnumSet.allOf(VMBackupType.class));
     }
 
-    public boolean backupIsConfigured(final EnumSet<VMBACKUP_TYPES> acceptable)
+    public boolean backupIsConfigured(final EnumSet<VMBackupType> acceptable)
     {
         if (backupIsConfigured)
         {
-            for (VMBACKUP_TYPES bt : acceptable)
+            for (VMBackupType bt : acceptable)
             {
                 switch (bt)
                 {
@@ -231,8 +249,35 @@ public class VirtualMachineEvent extends APIEvent
         return Optional.fromNullable(bcFileSystem);
     }
 
-    public enum VMBACKUP_TYPES
+    private EnumSet<VMBackupConfiguration> getEnabledConfigurations(
+        final BackupEventConfiguration cfg)
     {
-        COMPLETE, FILESYSTEM, SNAPSHOT;
+        EnumSet<VMBackupConfiguration> set = EnumSet.noneOf(VMBackupConfiguration.class);
+        if (cfg.getDefinedHourDateAndTime().isPresent())
+        {
+            set.add(VMBackupConfiguration.DEFINED_HOUR);
+        }
+        if (cfg.getHourlyHour().isPresent())
+        {
+            set.add(VMBackupConfiguration.HOURLY);
+        }
+        if (cfg.getDailyTime().isPresent())
+        {
+            set.add(VMBackupConfiguration.DAILY);
+        }
+        if (cfg.getWeeklyTime().isPresent())
+        {
+            set.add(VMBackupConfiguration.WEEKLY);
+        }
+        if (cfg.getMonthlyTime().isPresent())
+        {
+            set.add(VMBackupConfiguration.MONTHLY);
+        }
+        return set;
+    }
+
+    public Map<VMBackupType, EnumSet<VMBackupConfiguration>> getRequiredConfigurations()
+    {
+        return reqCfgs;
     }
 }

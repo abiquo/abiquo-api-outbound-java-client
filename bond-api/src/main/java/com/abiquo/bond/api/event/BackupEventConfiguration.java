@@ -135,6 +135,15 @@ public class BackupEventConfiguration
             || definedhour != null;
     }
 
+    public Optional<Date> getDefinedHourDateAndTime()
+    {
+        if (definedhour != null)
+        {
+            return Optional.of(definedhour.getDateAndTime());
+        }
+        return Optional.absent();
+    }
+
     public Optional<Integer> getHourlyHour()
     {
         if (hourly != null)
@@ -217,30 +226,35 @@ public class BackupEventConfiguration
 
     public class BackupDetailsTime extends BackupDetails
     {
-        Date hour;
+        Date time;
 
         BackupDetailsTime(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
             String timesetting = (String) settings.get(VMMetadata.TIME);
-            hour = tf.parse(timesetting);
+            time = tf.parse(timesetting);
         }
 
         public Date getTime()
         {
-            return hour;
+            return time;
         }
     }
 
     public class BackupDetailsDate extends BackupDetails
     {
-        Date hour;
+        Date dateandtime;
 
         BackupDetailsDate(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
-            String datesetting = (String) settings.get(VMMetadata.TIME);
-            hour = df.parse(datesetting);
+            String datesetting = (String) settings.get(VMMetadata.DATE);
+            dateandtime = df.parse(datesetting);
+        }
+
+        public Date getDateAndTime()
+        {
+            return dateandtime;
         }
     }
 
