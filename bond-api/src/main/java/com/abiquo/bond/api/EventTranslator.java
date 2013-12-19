@@ -24,7 +24,6 @@ import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.C
 import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.DEPLOY_FINISH;
 import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.METADATA_MODIFIED;
 import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.UNDEPLOY;
-import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.UNDEPLOY_FINISH;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -139,7 +138,14 @@ public class EventTranslator
                     apievent = new DeployVMEvent(event, vmdetails);
                 }
             }
-            else if (action.equalsIgnoreCase(UNDEPLOY_FINISH.action()))
+            // else if (action.equalsIgnoreCase(UNDEPLOY_FINISH.action()))
+            /*
+             * UNDEPLOY_FINISH.action() should be used here, but due to a bug that has not yet been
+             * fixed in a publically available version of the event-model api, it currently returns
+             * "DEPLOY_FINISH" instead of "UNDEPLOY_FINISH". I have therefore hardcoded the proper
+             * value here and we can reinstate the proper test once the fix is publically available.
+             */
+            else if (action.equalsIgnoreCase("UNDEPLOY_FINISH"))
             {
                 apievent = new UndeployVMEvent(event);
             }
