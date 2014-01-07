@@ -25,7 +25,9 @@ import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.D
 import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.METADATA_MODIFIED;
 import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.UNDEPLOY;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -56,11 +58,19 @@ public class EventTranslator
 {
     private final static Logger logger = LoggerFactory.getLogger(EventTranslator.class);
 
+    private static final List<String> linkBackup = new ArrayList<>();
+    static
+    {
+        linkBackup.add(NameToVMLinks.VM_LINK_METADATA);
+    }
+
     private ResourceExpander expander;
 
     private RESTLink currUserEditLink;
 
     private Map<String, String> startActions = new HashMap<>();
+
+    private NameToVMLinks mapNameToVMLinks;
 
     /**
      * Creates a connection to the REST API that is used to fetch any required extra data
@@ -70,10 +80,11 @@ public class EventTranslator
      * @param password User's password
      */
     public EventTranslator(final String server, final String user, final String password,
-        final RESTLink currUserEditLink)
+        final RESTLink currUserEditLink, final NameToVMLinks mapNameToVMLinks)
     {
         expander = new ResourceExpander(server, user, password);
         this.currUserEditLink = currUserEditLink;
+        this.mapNameToVMLinks = mapNameToVMLinks;
     }
 
     /**
@@ -109,6 +120,7 @@ public class EventTranslator
                     // need to ignore any events caused by the current user.
                     if (!currUserEditLink.getHref().endsWith(event.getUser().toLowerCase()))
                     {
+                        mapNameToVMLinks.updateVM(vmdetails, linkBackup);
                         apievent = new BackupVMEvent(event, vmdetails);
                     }
                     else
@@ -131,10 +143,12 @@ public class EventTranslator
                 String originalaction = startActions.get(vmname);
                 if (UNDEPLOY.action().equalsIgnoreCase(originalaction))
                 {
+                    mapNameToVMLinks.removeVM(vmdetails.getName());
                     apievent = new UndeployVMEvent(event);
                 }
                 else
                 {
+                    mapNameToVMLinks.addVM(vmdetails);
                     apievent = new DeployVMEvent(event, vmdetails);
                 }
             }
@@ -147,6 +161,7 @@ public class EventTranslator
              */
             else if (action.equalsIgnoreCase("UNDEPLOY_FINISH"))
             {
+                mapNameToVMLinks.removeVM(vmdetails.getName());
                 apievent = new UndeployVMEvent(event);
             }
             else

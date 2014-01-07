@@ -33,8 +33,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.abiquo.model.rest.RESTLink;
+import com.abiquo.model.transport.SingleResourceTransportDto;
 import com.abiquo.server.core.cloud.VirtualMachineDto;
 import com.abiquo.server.core.cloud.VirtualMachinesDto;
+import com.abiquo.server.core.infrastructure.DatacenterDto;
+import com.abiquo.server.core.infrastructure.DatacentersDto;
+import com.abiquo.server.core.infrastructure.MachineDto;
+import com.abiquo.server.core.infrastructure.MachinesDto;
+import com.abiquo.server.core.infrastructure.RackDto;
+import com.abiquo.server.core.infrastructure.RacksDto;
 import com.google.common.base.Optional;
 
 /**
@@ -50,7 +57,7 @@ public class NameToVMLinks extends APIConnection
 
     private List<String> supportedLinks = new ArrayList<>();
 
-    private Map<String, Map<String, RESTLink>> map = new HashMap<>();
+    private Map<String, Map<String, RESTLink>> mapVMtoLinks = new HashMap<>();
 
     public NameToVMLinks(final String server, final String user, final String password)
     {
@@ -58,7 +65,7 @@ public class NameToVMLinks extends APIConnection
 
         supportedLinks.add(VM_LINK_METADATA);
 
-        populateMap();
+        fetchAllVMs();
     }
 
     /**
@@ -71,7 +78,7 @@ public class NameToVMLinks extends APIConnection
      */
     public Optional<RESTLink> getLink(final String vmname, final String linktype)
     {
-        Map<String, RESTLink> links = map.get(vmname);
+        Map<String, RESTLink> links = mapVMtoLinks.get(vmname);
         if (links != null)
         {
             RESTLink link = links.get(linktype);
@@ -80,54 +87,148 @@ public class NameToVMLinks extends APIConnection
         return Optional.absent();
     }
 
-    /**
-     * Fetch the links for all the current VMs. Uses the paging support in Abiquo to fetch them 1000
-     * at a time.
-     */
-    private void populateMap()
+    public void addVM(final VirtualMachineDto vmdetails)
     {
-        WebTarget targetAllVms =
-            targetAPIBase.path("cloud").path("virtualmachines").queryParam("limit", "1000");
-        boolean morevms = true;
-        while (morevms)
+        logger.debug("Adding links for {}", vmdetails.getName());
+        Map<String, RESTLink> supported = new HashMap<>();
+        for (String supportedRel : supportedLinks)
         {
-            Invocation.Builder invocationBuilder =
-                targetAllVms.request(VirtualMachinesDto.MEDIA_TYPE);
+            RESTLink link = vmdetails.searchLink(supportedRel);
+            if (link != null)
+            {
+                logger.debug("Added {} link: {}", supportedRel, link.getHref());
+                supported.put(supportedRel, link);
+            }
+        }
+        mapVMtoLinks.put(vmdetails.getName(), supported);
+    }
+
+    /**
+     * Update all the links for the specified vm
+     * 
+     * @param vmdetails details of the vm to be updated
+     */
+    public void updateVM(final VirtualMachineDto vmdetails)
+    {
+        updateVM(vmdetails, supportedLinks);
+    }
+
+    /**
+     * Update the specified links for the specified vm
+     * 
+     * @param vmdetails details of the vm to be updated
+     * @param links a list of the links that are to be uodated
+     */
+    public void updateVM(final VirtualMachineDto vmdetails, final List<String> links)
+    {
+        logger.debug("Updating links for {}", vmdetails.getName());
+        Map<String, RESTLink> supported = new HashMap<>();
+        for (String supportedRel : links)
+        {
+            RESTLink link = vmdetails.searchLink(supportedRel);
+            if (link != null)
+            {
+                logger.debug("Added {} link: {}", supportedRel, link.getHref());
+                supported.put(supportedRel, link);
+            }
+        }
+        mapVMtoLinks.put(vmdetails.getName(), supported);
+    }
+
+    public void removeVM(final String name)
+    {
+        mapVMtoLinks.remove(name);
+    }
+
+    private void fetchAllVMs()
+    {
+        WebTarget targetAllDCs =
+            targetAPIBase.path("admin").path("datacenters").queryParam("limit", "100");
+        while (targetAllDCs != null)
+        {
+            Invocation.Builder invocationBuilder = targetAllDCs.request(DatacentersDto.MEDIA_TYPE);
             Response response = invocationBuilder.get();
             int status = response.getStatus();
             if (status == 200)
             {
-                VirtualMachinesDto resourceObject = response.readEntity(VirtualMachinesDto.class);
+                DatacentersDto resourceDCs = response.readEntity(DatacentersDto.class);
+                List<DatacenterDto> dclist = resourceDCs.getCollection();
 
-                List<VirtualMachineDto> vms = resourceObject.getCollection();
-                for (VirtualMachineDto vm : vms)
+                for (DatacenterDto dc : dclist)
                 {
-                    logger.debug("Finding links for {}", vm.getName());
-                    Map<String, RESTLink> supported = new HashMap<>();
-                    List<RESTLink> vmlinks = vm.getLinks();
-                    for (RESTLink vmlink : vmlinks)
+                    RESTLink rackslink = dc.searchLink("racks");
+                    if (rackslink != null)
                     {
-                        String rel = vmlink.getRel().toLowerCase();
-                        logger.debug("    {}: {}", rel, vmlink.getHref());
-                        if (supportedLinks.contains(rel))
+                        response = getResource(rackslink);
+                        status = response.getStatus();
+                        if (status == 200)
                         {
-                            supported.put(rel, vmlink);
+                            RacksDto resourceRacks = response.readEntity(RacksDto.class);
+                            List<RackDto> racklist = resourceRacks.getCollection();
+
+                            for (RackDto rack : racklist)
+                            {
+                                RESTLink machineslink = rack.searchLink("machines");
+                                if (machineslink != null)
+                                {
+                                    response = getResource(machineslink);
+                                    status = response.getStatus();
+                                    if (status == 200)
+                                    {
+                                        MachinesDto resourceMachines =
+                                            response.readEntity(MachinesDto.class);
+                                        List<MachineDto> machinelist =
+                                            resourceMachines.getCollection();
+
+                                        for (MachineDto machine : machinelist)
+                                        {
+                                            RESTLink vmslink =
+                                                machine.searchLink("virtualmachines");
+                                            if (vmslink != null)
+                                            {
+                                                response = getResource(vmslink);
+                                                status = response.getStatus();
+                                                if (status == 200)
+                                                {
+                                                    VirtualMachinesDto resourceVMs =
+                                                        response
+                                                            .readEntity(VirtualMachinesDto.class);
+                                                    List<VirtualMachineDto> vmlist =
+                                                        resourceVMs.getCollection();
+
+                                                    for (VirtualMachineDto vm : vmlist)
+                                                    {
+                                                        addVM(vm);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    map.put(vm.getName(), supported);
                 }
-
-                morevms = false;
-                List<RESTLink> links = resourceObject.getLinks();
-                for (RESTLink link : links)
-                {
-                    if (link.getRel().equalsIgnoreCase("next"))
-                    {
-                        targetAllVms = client.target(link.getHref());
-                        morevms = true;
-                    }
-                }
+                targetAllDCs = getNextTarget(resourceDCs);
             }
         }
+    }
+
+    private WebTarget getNextTarget(final SingleResourceTransportDto resource)
+    {
+        RESTLink nextlink = resource.searchLink("next");
+        if (nextlink != null)
+        {
+            return client.target(nextlink.getHref()).queryParam("limit", 100);
+        }
+        return null;
+    }
+
+    private Response getResource(final RESTLink link)
+    {
+        WebTarget target = client.target(link.getHref());
+        Invocation.Builder invocationBuilder = target.request(link.getType());
+        Response response = invocationBuilder.get();
+        return response;
     }
 }

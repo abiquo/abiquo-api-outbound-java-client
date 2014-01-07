@@ -246,7 +246,8 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
             new EventTranslator(config.getMServer(),
                 config.getMUser(),
                 config.getMUserPassword(),
-                currUserEditLink);
+                currUserEditLink,
+                mapNameToVMLinks);
 
         for (BackupPluginInterface plugin : handlersWithResponses)
         {
