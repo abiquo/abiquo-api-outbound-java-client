@@ -58,6 +58,11 @@ public class ResourceExpander extends APIConnection
             SingleResourceTransportDto resourceObject = response.readEntity(resourceClass);
             return resourceObject;
         }
+        else if (status == 404)
+        {
+            logger.warn("Request for object that does not exist: {}", targetResource.getUri());
+            return null;
+        }
         else
         {
             String error = response.readEntity(String.class);
@@ -93,7 +98,10 @@ public class ResourceExpander extends APIConnection
     public UserDto expandUserResource(final String resource) throws OutboundAPIClientHTTPException
     {
         UserDto user = (UserDto) expandResource(resource, UserDto.MEDIA_TYPE_JSON, UserDto.class);
-        logger.debug("UserDto: id:{} name:{}", user.getId(), user.getName());
+        if (user != null)
+        {
+            logger.debug("UserDto: id:{} name:{}", user.getId(), user.getName());
+        }
         return user;
     }
 
@@ -110,7 +118,10 @@ public class ResourceExpander extends APIConnection
         EnterpriseDto enterprise =
             (EnterpriseDto) expandResource(resource, EnterpriseDto.MEDIA_TYPE_JSON,
                 EnterpriseDto.class);
-        logger.debug("EnterpriseDto: id:{} name:{}", enterprise.getId(), enterprise.getName());
+        if (enterprise != null)
+        {
+            logger.debug("EnterpriseDto: id:{} name:{}", enterprise.getId(), enterprise.getName());
+        }
         return enterprise;
     }
 
@@ -127,7 +138,10 @@ public class ResourceExpander extends APIConnection
         VirtualMachineDto vm =
             (VirtualMachineDto) expandResource(resource, VirtualMachineDto.BASE_MEDIA_TYPE,
                 VirtualMachineDto.class);
-        logger.debug("VirtualMachineDto: id:{} name:{}", vm.getId(), vm.getName());
+        if (vm != null)
+        {
+            logger.debug("VirtualMachineDto: id:{} name:{}", vm.getId(), vm.getName());
+        }
         return vm;
     }
 }

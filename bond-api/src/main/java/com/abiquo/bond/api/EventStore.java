@@ -217,10 +217,6 @@ public class EventStore extends APIConnection
                 logger.error("HTTP error {} retrieving backup event metadata.", statusMeta);
             }
         }
-        else
-        {
-            logger.error("Event received for unknown virtual machine.");
-        }
         return Optional.absent();
     }
 
