@@ -43,6 +43,8 @@ import com.google.common.base.Optional;
  */
 public class BackupEventConfiguration
 {
+    private final static String VALUE_NOT_SET = "Not defined";
+
     private final static Logger logger = LoggerFactory.getLogger(BackupEventConfiguration.class);
 
     private static DateFormat df = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
@@ -144,6 +146,15 @@ public class BackupEventConfiguration
         return Optional.absent();
     }
 
+    public String getDefinedHourDateAndTimeAsText()
+    {
+        if (definedhour != null)
+        {
+            return df.format(definedhour.getDateAndTime());
+        }
+        return VALUE_NOT_SET;
+    }
+
     public Optional<Integer> getHourlyHour()
     {
         if (hourly != null)
@@ -151,6 +162,24 @@ public class BackupEventConfiguration
             return Optional.of(hourly.getHour());
         }
         return Optional.absent();
+    }
+
+    public String getHourlyHourAsText()
+    {
+        if (hourly != null)
+        {
+            return Integer.toString(hourly.getHour());
+        }
+        return VALUE_NOT_SET;
+    }
+
+    private String getTimeAsText(final BackupDetailsTime time)
+    {
+        if (time != null)
+        {
+            return tf.format(time.getTime());
+        }
+        return VALUE_NOT_SET;
     }
 
     public Optional<Date> getDailyTime()
@@ -162,6 +191,11 @@ public class BackupEventConfiguration
         return Optional.absent();
     }
 
+    public String getDailyTimeAsText()
+    {
+        return getTimeAsText(daily);
+    }
+
     public Optional<Date> getWeeklyTime()
     {
         if (weekly_planned != null)
@@ -169,6 +203,11 @@ public class BackupEventConfiguration
             return Optional.of(weekly_planned.getTime());
         }
         return Optional.absent();
+    }
+
+    public String getWeeklyTimeAsText()
+    {
+        return getTimeAsText(weekly_planned);
     }
 
     public Optional<Date> getMonthlyTime()
@@ -180,6 +219,11 @@ public class BackupEventConfiguration
         return Optional.absent();
     }
 
+    public String getMonthlyTimeAsText()
+    {
+        return getTimeAsText(monthly);
+    }
+
     public Optional<EnumSet<WEEKDAYS>> getWeeklyDays()
     {
         if (weekly_planned != null)
@@ -187,6 +231,17 @@ public class BackupEventConfiguration
             return Optional.of(weekly_planned.getDays());
         }
         return Optional.absent();
+    }
+
+    public String getWeeklyDaysAsText()
+    {
+        StringBuilder display = new StringBuilder();
+        EnumSet<WEEKDAYS> selecteddays = weekly_planned.getDays();
+        for (WEEKDAYS day : EnumSet.allOf(WEEKDAYS.class))
+        {
+            display.append(selecteddays.contains(day) ? "1" : "0");
+        }
+        return display.toString();
     }
 
     public abstract class BackupDetails
