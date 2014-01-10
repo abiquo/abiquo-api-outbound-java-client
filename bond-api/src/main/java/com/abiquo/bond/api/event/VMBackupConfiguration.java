@@ -20,20 +20,74 @@
  */
 package com.abiquo.bond.api.event;
 
+import com.google.common.base.Optional;
+
 public enum VMBackupConfiguration
 {
-    DEFINED_HOUR("Defined Hour"), HOURLY("Hourly"), DAILY("Daily"), WEEKLY("Weekly"), MONTHLY(
-        "Monthly");
-
-    private String displaytext;
-
-    VMBackupConfiguration(final String displaytext)
+    DEFINED_HOUR()
     {
-        this.displaytext = displaytext;
+        @Override
+        String formatDisplayText(final BackupEventConfiguration cfg)
+        {
+            return "Defined Hour (" + cfg.getDefinedHourDateAndTimeAsText() + ")";
+        }
+    },
+    HOURLY()
+    {
+        @Override
+        String formatDisplayText(final BackupEventConfiguration cfg)
+        {
+            return "Hourly (" + cfg.getHourlyHourAsText() + " hours)";
+        }
+    },
+    DAILY()
+    {
+        @Override
+        String formatDisplayText(final BackupEventConfiguration cfg)
+        {
+            return "Daily (" + cfg.getDailyTimeAsText() + ")";
+        }
+    },
+    WEEKLY()
+    {
+        @Override
+        String formatDisplayText(final BackupEventConfiguration cfg)
+        {
+            return "Weekly (" + cfg.getWeeklyTimeAsText() + " " + cfg.getWeeklyDaysAsText() + ")";
+        }
+    },
+    MONTHLY()
+    {
+        @Override
+        String formatDisplayText(final BackupEventConfiguration cfg)
+        {
+            return "Monthly (" + cfg.getMonthlyTimeAsText() + ")";
+        }
+    };
+
+    public String getDisplayText(final VMBackupType type, final VirtualMachineEvent event)
+    {
+        BackupEventConfiguration cfg;
+        Optional<BackupEventConfiguration> optcfg = Optional.absent();
+        switch (type)
+        {
+            case COMPLETE:
+                optcfg = event.getCompleteConfiguration();
+                break;
+            case FILESYSTEM:
+                optcfg = event.getCompleteConfiguration();
+                break;
+            case SNAPSHOT:
+                optcfg = event.getCompleteConfiguration();
+                break;
+        }
+        if (optcfg.isPresent())
+        {
+            cfg = optcfg.get();
+            return formatDisplayText(cfg);
+        }
+        return "";
     }
 
-    public String getDisplayText(final VMBackupType type)
-    {
-        return type.getDisplayText() + " " + displaytext;
-    }
+    abstract String formatDisplayText(BackupEventConfiguration cfg);
 }

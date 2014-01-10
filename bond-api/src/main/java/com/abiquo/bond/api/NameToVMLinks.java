@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
@@ -144,6 +145,11 @@ public class NameToVMLinks extends APIConnection
     public void removeVM(final String name)
     {
         mapVMtoLinks.remove(name);
+    }
+
+    public Set<String> getVMNames()
+    {
+        return mapVMtoLinks.keySet();
     }
 
     private void fetchAllVMs()
