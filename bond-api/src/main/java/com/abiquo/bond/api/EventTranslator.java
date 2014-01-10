@@ -114,7 +114,7 @@ public class EventTranslator
             {
                 // Ignore any backup events before the machine is deployed as there will be no
                 // physical machine yet and so the backup system will not know anything about it.
-                if (vmdetails.getState() != VirtualMachineState.NOT_ALLOCATED)
+                if (vmdetails != null && vmdetails.getState() != VirtualMachineState.NOT_ALLOCATED)
                 {
                     // Updating the backup results causes a new backup event to be generated, so we
                     // need to ignore any events caused by the current user.
@@ -143,7 +143,7 @@ public class EventTranslator
                 String originalaction = startActions.get(vmname);
                 if (UNDEPLOY.action().equalsIgnoreCase(originalaction))
                 {
-                    mapNameToVMLinks.removeVM(vmdetails.getName());
+                    mapNameToVMLinks.removeVM(vmname);
                     apievent = new UndeployVMEvent(event);
                 }
                 else
@@ -161,7 +161,11 @@ public class EventTranslator
              */
             else if (action.equalsIgnoreCase("UNDEPLOY_FINISH"))
             {
-                mapNameToVMLinks.removeVM(vmdetails.getName());
+                String vmname = getVMName(vmdetails, event);
+                if (vmname != null)
+                {
+                    mapNameToVMLinks.removeVM(vmname);
+                }
                 apievent = new UndeployVMEvent(event);
             }
             else

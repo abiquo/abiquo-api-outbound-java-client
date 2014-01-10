@@ -89,18 +89,21 @@ public class NameToVMLinks extends APIConnection
 
     public void addVM(final VirtualMachineDto vmdetails)
     {
-        logger.debug("Adding links for {}", vmdetails.getName());
-        Map<String, RESTLink> supported = new HashMap<>();
-        for (String supportedRel : supportedLinks)
+        if (vmdetails != null)
         {
-            RESTLink link = vmdetails.searchLink(supportedRel);
-            if (link != null)
+            logger.debug("Adding links for {}", vmdetails.getName());
+            Map<String, RESTLink> supported = new HashMap<>();
+            for (String supportedRel : supportedLinks)
             {
-                logger.debug("Added {} link: {}", supportedRel, link.getHref());
-                supported.put(supportedRel, link);
+                RESTLink link = vmdetails.searchLink(supportedRel);
+                if (link != null)
+                {
+                    logger.debug("Added {} link: {}", supportedRel, link.getHref());
+                    supported.put(supportedRel, link);
+                }
             }
+            mapVMtoLinks.put(vmdetails.getName(), supported);
         }
-        mapVMtoLinks.put(vmdetails.getName(), supported);
     }
 
     /**
@@ -121,18 +124,21 @@ public class NameToVMLinks extends APIConnection
      */
     public void updateVM(final VirtualMachineDto vmdetails, final List<String> links)
     {
-        logger.debug("Updating links for {}", vmdetails.getName());
-        Map<String, RESTLink> supported = new HashMap<>();
-        for (String supportedRel : links)
+        if (vmdetails != null)
         {
-            RESTLink link = vmdetails.searchLink(supportedRel);
-            if (link != null)
+            logger.debug("Updating links for {}", vmdetails.getName());
+            Map<String, RESTLink> supported = new HashMap<>();
+            for (String supportedRel : links)
             {
-                logger.debug("Added {} link: {}", supportedRel, link.getHref());
-                supported.put(supportedRel, link);
+                RESTLink link = vmdetails.searchLink(supportedRel);
+                if (link != null)
+                {
+                    logger.debug("Added {} link: {}", supportedRel, link.getHref());
+                    supported.put(supportedRel, link);
+                }
             }
+            mapVMtoLinks.put(vmdetails.getName(), supported);
         }
-        mapVMtoLinks.put(vmdetails.getName(), supported);
     }
 
     public void removeVM(final String name)
