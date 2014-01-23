@@ -20,6 +20,7 @@
  */
 package com.abiquo.bond.api.response;
 
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -30,4 +31,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public interface BackupResultsHandler extends Runnable
 {
     void setQueue(LinkedBlockingQueue<VMBackupStatusList> queue);
+
+    void linkToVMCache(Set<String> cache);
 }

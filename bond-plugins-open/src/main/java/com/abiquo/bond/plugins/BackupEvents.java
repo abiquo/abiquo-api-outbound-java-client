@@ -20,6 +20,7 @@
  */
 package com.abiquo.bond.plugins;
 
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import com.abiquo.bond.api.annotations.HandleBackupVMEvent;
@@ -81,7 +82,6 @@ public class BackupEvents extends AbstractPlugin implements BackupPluginInterfac
 
 class SampleBackupResultsHandler implements BackupResultsHandler
 {
-
     @Override
     public void run()
     {
@@ -94,4 +94,9 @@ class SampleBackupResultsHandler implements BackupResultsHandler
         System.out.println("BackupEvents:SampleBackupResultsHandler:setQueue has been called");
     }
 
+    @Override
+    public void linkToVMCache(final Set<String> cache)
+    {
+        // We don't need the cache so just ignore it;
+    }
 }

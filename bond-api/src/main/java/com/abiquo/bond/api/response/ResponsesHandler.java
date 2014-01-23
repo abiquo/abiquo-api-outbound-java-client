@@ -91,6 +91,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
         {
             BackupResultsHandler handler = plugin.getResultsHandler();
             handler.setQueue(resultqueue);
+            handler.linkToVMCache(mapNameToVMLinks.getVMNames());
             resultsfetchers.add(scheduler.scheduleAtFixedRate(handler, 0, timeperiod, timeunit));
             logger.debug("Backup results handler {} running at {} {} intervals", new Object[] {
             handler.getClass(), timeperiod, timeunit.toString().toLowerCase()});
