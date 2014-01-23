@@ -133,8 +133,7 @@ public class BackupEventConfiguration
 
     public boolean isConfigured()
     {
-        return hourly != null || daily != null || weekly_planned != null || monthly != null
-            || definedhour != null;
+        return hourly != null || daily != null || weekly_planned != null || monthly != null;
     }
 
     public Optional<Date> getDefinedHourDateAndTime()
@@ -303,7 +302,7 @@ public class BackupEventConfiguration
         BackupDetailsDate(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
-            String datesetting = (String) settings.get(VMMetadata.DATE);
+            String datesetting = (String) settings.get(VMMetadata.TIME);
             dateandtime = df.parse(datesetting);
         }
 
