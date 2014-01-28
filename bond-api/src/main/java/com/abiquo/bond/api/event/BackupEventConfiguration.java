@@ -131,9 +131,45 @@ public class BackupEventConfiguration
         }
     }
 
-    public boolean isConfigured()
+    public boolean isConfigured(final EnumSet<VMBackupConfiguration> acceptable)
     {
-        return hourly != null || daily != null || weekly_planned != null || monthly != null;
+        for (VMBackupConfiguration cfg : acceptable)
+        {
+            switch (cfg)
+            {
+                case DEFINED_HOUR:
+                    if (definedhour != null)
+                    {
+                        return true;
+                    }
+                    break;
+                case HOURLY:
+                    if (hourly != null)
+                    {
+                        return true;
+                    }
+                    break;
+                case DAILY:
+                    if (daily != null)
+                    {
+                        return true;
+                    }
+                    break;
+                case WEEKLY:
+                    if (weekly_planned != null)
+                    {
+                        return true;
+                    }
+                    break;
+                case MONTHLY:
+                    if (monthly != null)
+                    {
+                        return true;
+                    }
+                    break;
+            }
+        }
+        return false;
     }
 
     public Optional<Date> getDefinedHourDateAndTime()
