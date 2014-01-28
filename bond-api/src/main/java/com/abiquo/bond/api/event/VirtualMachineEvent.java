@@ -199,31 +199,33 @@ public class VirtualMachineEvent extends APIEvent
 
     public boolean backupIsConfigured()
     {
-        return backupIsConfigured(EnumSet.allOf(VMBackupType.class));
+        return backupIsConfigured(EnumSet.allOf(VMBackupType.class),
+            EnumSet.allOf(VMBackupConfiguration.class));
     }
 
-    public boolean backupIsConfigured(final EnumSet<VMBackupType> acceptable)
+    public boolean backupIsConfigured(final EnumSet<VMBackupType> acceptableTypes,
+        final EnumSet<VMBackupConfiguration> acceptableConfigurations)
     {
         if (backupIsConfigured)
         {
-            for (VMBackupType bt : acceptable)
+            for (VMBackupType bt : acceptableTypes)
             {
                 switch (bt)
                 {
                     case COMPLETE:
-                        if (bcComplete.isConfigured())
+                        if (bcComplete.isConfigured(acceptableConfigurations))
                         {
                             return true;
                         }
                         break;
                     case FILESYSTEM:
-                        if (bcFileSystem.isConfigured())
+                        if (bcFileSystem.isConfigured(acceptableConfigurations))
                         {
                             return true;
                         }
                         break;
                     case SNAPSHOT:
-                        if (bcSnapshot.isConfigured())
+                        if (bcSnapshot.isConfigured(acceptableConfigurations))
                         {
                             return true;
                         }
