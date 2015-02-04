@@ -74,7 +74,7 @@ public class EventTranslator
 
     /**
      * Creates a connection to the REST API that is used to fetch any required extra data
-     * 
+     *
      * @param server Name or ip address of server on which the REST API is running
      * @param user User to authenticate to server as
      * @param password User's password
@@ -98,7 +98,7 @@ public class EventTranslator
      * <li>DeployVMEvent: Type is VIRTUAL_MACHINE, Action is DEPLOY_FINISH
      * <li>UndeployVMEvent: Type is VIRTUAL_MACHINE, Action is UNDEPLOY_FINISH
      * </ul>
-     * 
+     *
      * @param event received from the M server
      * @return An APIEvent or subclass instance populated with extra data fetched using the REST API
      * @throws OutboundAPIClientException
@@ -205,8 +205,8 @@ public class EventTranslator
             if (optVMDetails.isPresent())
             {
                 EventDetails details = optVMDetails.get();
-                Map<String, String> values = details.getTransportMap();
-                name = values.get("VIRTUAL_MACHINE_NAME");
+                Map<String, Object> values = details.getTransportMap();
+                name = values.get("VIRTUAL_MACHINE_NAME").toString();
             }
         }
         return name;
