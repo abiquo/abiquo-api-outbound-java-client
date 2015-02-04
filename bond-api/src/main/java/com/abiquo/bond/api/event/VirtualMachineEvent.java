@@ -60,7 +60,7 @@ public class VirtualMachineEvent extends APIEvent
     /**
      * Extracts the name of the machine and the backup configuration data from the supplied
      * VirtualMachineDto instance
-     * 
+     *
      * @param event the original event received from the M server. A reference to this is kept in
      *            case the plugin requires and extra data
      * @param vmdetails Details of the virtual machine
@@ -83,11 +83,14 @@ public class VirtualMachineEvent extends APIEvent
     public VirtualMachineEvent(final Event event)
     {
         super(event);
-        Map<String, String> details = getEventDetails(event);
-        vmname = details.get("VIRTUAL_MACHINE_NAME");
-        hypervisorname = details.get("MACHINE_NAME");
-        hypervisorip = details.get("HYPERVISOR_IP");
-        hypervisortype = details.get("HYPERVISOR_TYPE");
+        Map<String, Object> details = getEventDetails(event);
+        if (!details.isEmpty())
+        {
+            vmname = details.get("VIRTUAL_MACHINE_NAME").toString();
+            hypervisorname = details.get("MACHINE_NAME").toString();
+            hypervisorip = details.get("HYPERVISOR_IP").toString();
+            hypervisortype = details.get("HYPERVISOR_TYPE").toString();
+        }
     }
 
     public VirtualMachineEvent(final EventDto event, final Optional<MetadataDto> optMetaData)
@@ -127,7 +130,7 @@ public class VirtualMachineEvent extends APIEvent
         return hypervisors;
     }
 
-    private Map<String, String> getEventDetails(final Event event)
+    private Map<String, Object> getEventDetails(final Event event)
     {
         Optional< ? extends EventDetails> optVMDetails = event.getDetails();
         if (optVMDetails.isPresent())
@@ -135,7 +138,7 @@ public class VirtualMachineEvent extends APIEvent
             EventDetails details = optVMDetails.get();
             return details.getTransportMap();
         }
-        return new HashMap<String, String>();
+        return new HashMap<String, Object>();
     }
 
     @Override

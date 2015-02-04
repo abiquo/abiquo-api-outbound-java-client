@@ -73,7 +73,7 @@ public class ResourceExpander extends APIConnection
 
     /**
      * Translates the supplied link into an instance of the supplied class
-     * 
+     *
      * @param link Link from which data is to be fetched
      * @param resourceClass Type of class to which the data is to be translated
      * @return an instance of the resourceClass
@@ -90,7 +90,7 @@ public class ResourceExpander extends APIConnection
 
     /**
      * Translates the supplied resource String into an instance of the UserDto class
-     * 
+     *
      * @param resource String containing the data to be converted
      * @return an instance of the UserDto class created from the resource String
      * @throws OutboundAPIClientHTTPException
@@ -107,7 +107,7 @@ public class ResourceExpander extends APIConnection
 
     /**
      * Translates the supplied resource String into an instance of the EnterpriseDto class
-     * 
+     *
      * @param resource String containing the data to be converted
      * @return an instance of the EnterpriseDto class created from the resource String
      * @throws OutboundAPIClientHTTPException
@@ -127,7 +127,7 @@ public class ResourceExpander extends APIConnection
 
     /**
      * Translates the supplied resource String into an instance of the VirtualMachineDto class
-     * 
+     *
      * @param resource String containing the data to be converted
      * @return an instance of the VirtualMachineDto class created from the resource String
      * @throws OutboundAPIClientHTTPException
@@ -136,7 +136,7 @@ public class ResourceExpander extends APIConnection
         throws OutboundAPIClientHTTPException
     {
         VirtualMachineDto vm =
-            (VirtualMachineDto) expandResource(resource, VirtualMachineDto.BASE_MEDIA_TYPE,
+            (VirtualMachineDto) expandResource(resource, VirtualMachineDto.SHORT_MEDIA_TYPE_XML,
                 VirtualMachineDto.class);
         if (vm != null)
         {
