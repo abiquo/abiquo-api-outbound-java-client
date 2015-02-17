@@ -151,10 +151,10 @@ public class ResponsesHandler extends APIConnection implements Runnable
 
                         WebTarget targetUpdate = client.target(link.getHref());
                         Invocation.Builder invocationBuilder =
-                            targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_XML);
+                            targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_JSON);
                         Response response =
                             invocationBuilder.put(Entity.entity(resourceObjectMeta,
-                                MetadataDto.SHORT_MEDIA_TYPE_XML));
+                                MetadataDto.SHORT_MEDIA_TYPE_JSON));
                         int status = response.getStatus();
                         if (status == 200)
                         {
