@@ -129,37 +129,41 @@ public class ResponsesHandler extends APIConnection implements Runnable
                         MetadataDto resourceObjectMeta = responseMeta.readEntity(MetadataDto.class);
                         Map<String, Object> metadata = resourceObjectMeta.getMetadata();
 
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> mapMetadata =
-                            (Map<String, Object>) metadata.get(VMMetadata.METADATA);
-                        if (mapMetadata == null)
+                        if (metadata != null)
                         {
-                            mapMetadata = new HashMap<>();
-                            resourceObjectMeta.setMetadata(mapMetadata);
-                        }
 
-                        List<Map<String, Object>> resultslist = new ArrayList<>();
-                        for (VMBackupStatus status : event.getStatuses())
-                        {
-                            resultslist.add(status.getMetaData());
-                        }
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> mapMetadata =
+                                (Map<String, Object>) metadata.get(VMMetadata.METADATA);
+                            if (mapMetadata == null)
+                            {
+                                mapMetadata = new HashMap<>();
+                                resourceObjectMeta.setMetadata(mapMetadata);
+                            }
 
-                        Map<String, Object> backupResults = new HashMap<>();
-                        backupResults.put(VMMetadata.RESULTS, resultslist);
+                            List<Map<String, Object>> resultslist = new ArrayList<>();
+                            for (VMBackupStatus status : event.getStatuses())
+                            {
+                                resultslist.add(status.getMetaData());
+                            }
 
-                        mapMetadata.put(VMMetadata.LAST_BACKUPS, backupResults);
+                            Map<String, Object> backupResults = new HashMap<>();
+                            backupResults.put(VMMetadata.RESULTS, resultslist);
 
-                        WebTarget targetUpdate = client.target(link.getHref());
-                        Invocation.Builder invocationBuilder =
-                            targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_XML);
-                        Response response =
-                            invocationBuilder.put(Entity.entity(resourceObjectMeta,
-                                MetadataDto.SHORT_MEDIA_TYPE_XML));
-                        int status = response.getStatus();
-                        if (status == 200)
-                        {
-                            logger.debug("Backup status for vm {} updated successfully",
-                                event.getVMName());
+                            mapMetadata.put(VMMetadata.LAST_BACKUPS, backupResults);
+
+                            WebTarget targetUpdate = client.target(link.getHref());
+                            Invocation.Builder invocationBuilder =
+                                targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_XML);
+                            Response response =
+                                invocationBuilder.put(Entity.entity(resourceObjectMeta,
+                                    MetadataDto.SHORT_MEDIA_TYPE_XML));
+                            int status = response.getStatus();
+                            if (status == 200)
+                            {
+                                logger.debug("Backup status for vm {} updated successfully",
+                                    event.getVMName());
+                            }
                         }
                         else
                         {
