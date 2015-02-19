@@ -40,9 +40,9 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
 
     private BackupResultEnum state;
 
-    private String name = "defined_hour";
+    private String name;
 
-    private String type = "3";
+    private String type = "complete";
 
     private Date date;
 
