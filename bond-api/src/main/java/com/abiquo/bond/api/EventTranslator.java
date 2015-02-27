@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import com.abiquo.bond.api.event.APIEvent;
 import com.abiquo.bond.api.event.BackupVMEvent;
 import com.abiquo.bond.api.event.DeployVMEvent;
+import com.abiquo.bond.api.event.RestoreVMEvent;
 import com.abiquo.bond.api.event.UndeployVMEvent;
 import com.abiquo.bond.api.event.VirtualMachineEvent;
 import com.abiquo.event.model.Event;
@@ -167,6 +168,14 @@ public class EventTranslator
                     mapNameToVMLinks.removeVM(vmname);
                 }
                 apievent = new UndeployVMEvent(event);
+            }
+            /*
+             * RESTORE_BACKUP
+             */
+            else if (action.equalsIgnoreCase("RESTORE_BACKUP"))
+            {
+                mapNameToVMLinks.updateVM(vmdetails, linkBackup);
+                apievent = new RestoreVMEvent(event, vmdetails);
             }
             else
             {

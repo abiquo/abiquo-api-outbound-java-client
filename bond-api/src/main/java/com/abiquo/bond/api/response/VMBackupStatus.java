@@ -48,6 +48,8 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
 
     private long size;
 
+    private String resultId;
+
     public VMBackupStatus()
     {
         // TODO Auto-generated constructor stub
@@ -62,6 +64,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         metadata.put("name", name);
         metadata.put("size", size);
         metadata.put("type", type);
+        metadata.put("id", resultId);
 
         return metadata;
     }
@@ -92,9 +95,15 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         this.size = size;
     }
 
+    public void setResultId(final String resultId)
+    {
+        this.resultId = resultId;
+    }
+
     @Override
     public int compareTo(final VMBackupStatus o)
     {
         return (int) (date.getTime() - o.date.getTime());
     }
+
 }

@@ -33,12 +33,14 @@ import com.abiquo.bond.api.WrapperNotification;
 import com.abiquo.bond.api.annotations.HandleAnyEvent;
 import com.abiquo.bond.api.annotations.HandleBackupVMEvent;
 import com.abiquo.bond.api.annotations.HandleDeployVMEvent;
+import com.abiquo.bond.api.annotations.HandleRestoreVMEvent;
 import com.abiquo.bond.api.annotations.HandleUndeployVMEvent;
 import com.abiquo.bond.api.event.APIEvent;
 import com.abiquo.bond.api.event.APIEventResult;
 import com.abiquo.bond.api.event.APIEventResultState;
 import com.abiquo.bond.api.event.BackupVMEvent;
 import com.abiquo.bond.api.event.DeployVMEvent;
+import com.abiquo.bond.api.event.RestoreVMEvent;
 import com.abiquo.bond.api.event.UndeployVMEvent;
 
 /**
@@ -67,6 +69,7 @@ public abstract class AbstractPlugin implements PluginInterface
         mapAnnotationToEvent.put(HandleBackupVMEvent.class, BackupVMEvent.class);
         mapAnnotationToEvent.put(HandleDeployVMEvent.class, DeployVMEvent.class);
         mapAnnotationToEvent.put(HandleUndeployVMEvent.class, UndeployVMEvent.class);
+        mapAnnotationToEvent.put(HandleRestoreVMEvent.class, RestoreVMEvent.class);
         mapAnnotationToEvent.put(HandleAnyEvent.class, APIEvent.class);
     }
 
@@ -123,7 +126,7 @@ public abstract class AbstractPlugin implements PluginInterface
     /**
      * Allows the plugin to pass messages back to the client wrapper without interrupting the flow
      * of the program.
-     * 
+     *
      * @param handler notification handler supplied by the client wrapper
      */
     public void setNotificationHandler(final WrapperNotification handler)
@@ -133,7 +136,7 @@ public abstract class AbstractPlugin implements PluginInterface
 
     /**
      * Pass a notification back to the client wrapper if a notification handler has been set
-     * 
+     *
      * @param msg the notification to be return to the client wrapper
      */
     protected void notifyWrapper(final String msg)
@@ -147,7 +150,7 @@ public abstract class AbstractPlugin implements PluginInterface
     /**
      * Pass a notification and exception back to the client wrapper if a notification handler has
      * been set
-     * 
+     *
      * @param msg the notification to be return to the client wrapper
      * @param t the exception to be return to the client wrapper
      */
@@ -161,7 +164,7 @@ public abstract class AbstractPlugin implements PluginInterface
 
     /**
      * Works out which method to use to process the plugin and then executes that method..
-     * 
+     *
      * @return the result of the event processing
      */
     @Override

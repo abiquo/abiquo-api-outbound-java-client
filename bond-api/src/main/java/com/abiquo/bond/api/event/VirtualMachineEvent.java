@@ -47,6 +47,14 @@ public class VirtualMachineEvent extends APIEvent
 
     protected String hypervisortype;
 
+    protected String backupStatus;
+
+    protected String restoreStatus;
+
+    protected String backupDate;
+
+    protected String resultId;
+
     private BackupEventConfiguration bcComplete;
 
     private BackupEventConfiguration bcSnapshot;
@@ -86,10 +94,18 @@ public class VirtualMachineEvent extends APIEvent
         Map<String, Object> details = getEventDetails(event);
         if (!details.isEmpty())
         {
-            vmname = details.get("VIRTUAL_MACHINE_NAME").toString();
-            hypervisorname = details.get("MACHINE_NAME").toString();
-            hypervisorip = details.get("HYPERVISOR_IP").toString();
-            hypervisortype = details.get("HYPERVISOR_TYPE").toString();
+            if (event.getAction().equalsIgnoreCase("RESTORE_BACKUP"))
+            {
+                backupDate = details.get("BACKUP_DATE").toString();
+                resultId = details.get("BACKUP_ID").toString();
+            }
+            else
+            {
+                vmname = details.get("VIRTUAL_MACHINE_NAME").toString();
+                hypervisorname = details.get("MACHINE_NAME").toString();
+                hypervisorip = details.get("HYPERVISOR_IP").toString();
+                hypervisortype = details.get("HYPERVISOR_TYPE").toString();
+            }
         }
     }
 
@@ -114,6 +130,16 @@ public class VirtualMachineEvent extends APIEvent
     public String getVMName()
     {
         return vmname;
+    }
+
+    public String getBackupDate()
+    {
+        return backupDate;
+    }
+
+    public void setBackupDate(final String backupDate)
+    {
+        this.backupDate = backupDate;
     }
 
     public List<String> getHypervisorNames()
