@@ -28,17 +28,13 @@ import java.util.Map;
 import com.abiquo.bond.api.abqapi.VMMetadata;
 
 /**
- * A class representing the result of a backup operation. A backup plugin will need to convert the
+ * A class representing the result of a restore operation. A backup plugin will need to convert the
  * results it receives from the backup software into instances of this class which will then be used
  * to update the Abiquo server.
  */
-public class VMBackupStatus implements Comparable<VMBackupStatus>
+public class VMRestoreStatus implements Comparable<VMRestoreStatus>
 {
     private static SimpleDateFormat dateformat = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
-
-    private String reason;
-
-    private BackupResultEnum state;
 
     private String name;
 
@@ -48,11 +44,11 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
 
     private long size;
 
-    private String resultId;
+    private String result;
 
     private String vmRestorePoint;
 
-    public VMBackupStatus()
+    public VMRestoreStatus()
     {
         // TODO Auto-generated constructor stub
     }
@@ -62,19 +58,12 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         Map<String, Object> metadata = new HashMap<>();
 
         metadata.put(VMMetadata.DATE, dateformat.format(date));
-        metadata.put("status", state.toString());
         metadata.put("name", name);
         metadata.put("size", size);
         metadata.put("type", type);
-        metadata.put("id", resultId);
+        metadata.put("result", result);
 
         return metadata;
-    }
-
-    public void setState(final BackupResultEnum state, final String reason)
-    {
-        this.state = state;
-        this.reason = reason;
     }
 
     public void setName(final String name)
@@ -97,13 +86,13 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         this.size = size;
     }
 
-    public void setResultId(final String resultId)
+    public void setResult(final String result)
     {
-        this.resultId = resultId;
+        this.result = result;
     }
 
     @Override
-    public int compareTo(final VMBackupStatus o)
+    public int compareTo(final VMRestoreStatus o)
     {
         return (int) (date.getTime() - o.date.getTime());
     }
@@ -113,7 +102,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         return vmRestorePoint;
     }
 
-    public void setVmRestorePoint(final String vmRestorePoint)
+    public void setVmRestorePoint(String vmRestorePoint)
     {
         this.vmRestorePoint = vmRestorePoint;
     }

@@ -67,6 +67,8 @@ public class ResponsesHandler extends APIConnection implements Runnable
 
     private LinkedBlockingQueue<VMBackupStatusList> resultqueue = new LinkedBlockingQueue<>();
 
+    private LinkedBlockingQueue<VMRestoreStatusList> restorequeue = new LinkedBlockingQueue<>();
+
     private long timeperiod;
 
     private TimeUnit timeunit;
@@ -91,6 +93,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
         {
             BackupResultsHandler handler = plugin.getResultsHandler();
             handler.setQueue(resultqueue);
+            handler.setRestoreQueue(restorequeue);
             handler.linkToVMCache(mapNameToVMLinks.getVMNames());
             resultsfetchers.add(scheduler.scheduleAtFixedRate(handler, 0, timeperiod, timeunit));
             logger.debug("Backup results handler {} running at {} {} intervals", new Object[] {
@@ -110,6 +113,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
         {
             try
             {
+                VMRestoreStatusList restore = restorequeue.take();
                 VMBackupStatusList event = resultqueue.take();
 
                 Optional<RESTLink> optlink =
@@ -143,7 +147,21 @@ public class ResponsesHandler extends APIConnection implements Runnable
                             List<Map<String, Object>> resultslist = new ArrayList<>();
                             for (VMBackupStatus status : event.getStatuses())
                             {
-                                resultslist.add(status.getMetaData());
+                                Map<String, Object> resultsMap = status.getMetaData();
+                                for (VMRestoreStatus restoreStatus : restore.getStatuses())
+                                {
+                                    if (status.getVmRestorePoint().equals(
+                                        restoreStatus.getVmRestorePoint()))
+                                    {
+                                        resultsMap.put(VMMetadata.RESTORE, "requested");
+                                        restoreStatus.setName(status.getMetaData()
+                                            .get(VMMetadata.NAME).toString());
+                                        restoreStatus.setSize((long) status.getMetaData().get(
+                                            VMMetadata.SIZE));
+                                        resultsMap.put("restoreInfo", restoreStatus.getMetaData());
+                                    }
+                                }
+                                resultslist.add(resultsMap);
                             }
 
                             Map<String, Object> backupResults = new HashMap<>();

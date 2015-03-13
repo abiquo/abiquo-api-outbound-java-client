@@ -20,19 +20,36 @@
  */
 package com.abiquo.bond.api.response;
 
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * A BackupResultsHandler is a class that retrieves results from the backup system and adds them to
- * a queue provided by the client. The client will then update the Abiquo server with any results it
- * finds on the queue.
+ * A list of backup restore related to a single virtual machine
  */
-public interface BackupResultsHandler extends Runnable
+public class VMRestoreStatusList
 {
-    void setQueue(LinkedBlockingQueue<VMBackupStatusList> queue);
+    private String vmname;
 
-    void setRestoreQueue(LinkedBlockingQueue<VMRestoreStatusList> restoreQueue);
+    private List<VMRestoreStatus> statuses = new ArrayList<>();
 
-    void linkToVMCache(Set<String> cache);
+    public VMRestoreStatusList(final String vmname, final List<VMRestoreStatus> statuses)
+    {
+        this.vmname = vmname;
+        this.statuses.addAll(statuses);
+    }
+
+    public String getVMName()
+    {
+        return vmname;
+    }
+
+    public List<VMRestoreStatus> getStatuses()
+    {
+        return statuses;
+    }
+
+    public int size()
+    {
+        return statuses.size();
+    }
 }
