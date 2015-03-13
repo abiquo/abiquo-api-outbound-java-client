@@ -55,6 +55,8 @@ public class VirtualMachineEvent extends APIEvent
 
     protected String resultId;
 
+    protected String state;
+
     private BackupEventConfiguration bcComplete;
 
     private BackupEventConfiguration bcSnapshot;
@@ -98,6 +100,11 @@ public class VirtualMachineEvent extends APIEvent
             {
                 backupDate = details.get("BACKUP_DATE").toString();
                 resultId = details.get("BACKUP_ID").toString();
+            }
+            if (event.getAction().equals("VSM_CHANGE_STATE"))
+            {
+                vmname = details.get("VIRTUAL_MACHINE_NAME").toString();
+                state = details.get("VIRTUAL_MACHINE_STATE").toString();
             }
             else
             {

@@ -66,6 +66,8 @@ public class VMMetadata
 
     public static final String LAST_BACKUPS = "backupResults";
 
+    public static final String RESULT = "result";
+
     public static final String RESULTS = "results";
 
     public static final String DATE = "date";
@@ -85,6 +87,14 @@ public class VMMetadata
     public static final String DAY_FORMAT = "yyyy/MM/dd";
 
     public static final String CHEF = "chef";
+
+    public static final String NAME = "name";
+
+    public static final String SIZE = "size";
+
+    public static final String RESTORE = "restore";
+
+    public static final String RESTORE_INFO = "restoreInfo";
 
     /**
      * This field is missing from the
