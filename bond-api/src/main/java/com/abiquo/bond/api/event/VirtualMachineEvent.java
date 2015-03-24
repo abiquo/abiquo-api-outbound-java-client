@@ -20,6 +20,8 @@
  */
 package com.abiquo.bond.api.event;
 
+import static java.lang.String.valueOf;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -54,6 +56,8 @@ public class VirtualMachineEvent extends APIEvent
     protected String backupDate;
 
     protected String resultId;
+
+    protected String state;
 
     private BackupEventConfiguration bcComplete;
 
@@ -96,15 +100,20 @@ public class VirtualMachineEvent extends APIEvent
         {
             if (event.getAction().equalsIgnoreCase("RESTORE_BACKUP"))
             {
-                backupDate = details.get("BACKUP_DATE").toString();
-                resultId = details.get("BACKUP_ID").toString();
+                backupDate = valueOf(details.get("BACKUP_DATE"));
+                resultId = valueOf(details.get("BACKUP_ID"));
+            }
+            else if (event.getAction().equals("VSM_CHANGE_STATE"))
+            {
+                vmname = valueOf(details.get("VIRTUAL_MACHINE_NAME"));
+                state = valueOf(details.get("VIRTUAL_MACHINE_STATE"));
             }
             else
             {
-                vmname = details.get("VIRTUAL_MACHINE_NAME").toString();
-                hypervisorname = details.get("MACHINE_NAME").toString();
-                hypervisorip = details.get("HYPERVISOR_IP").toString();
-                hypervisortype = details.get("HYPERVISOR_TYPE").toString();
+                vmname = valueOf(details.get("VIRTUAL_MACHINE_NAME"));
+                hypervisorname = valueOf(details.get("MACHINE_NAME"));
+                hypervisorip = valueOf(details.get("HYPERVISOR_IP"));
+                hypervisortype = valueOf(details.get("HYPERVISOR_TYPE"));
             }
         }
     }
