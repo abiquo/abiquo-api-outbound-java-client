@@ -23,6 +23,9 @@ package com.abiquo.bond.plugins;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.abiquo.bond.api.annotations.HandleBackupVMEvent;
 import com.abiquo.bond.api.event.BackupVMEvent;
 import com.abiquo.bond.api.plugin.AbstractPlugin;
@@ -83,16 +86,19 @@ public class BackupEvents extends AbstractPlugin implements BackupPluginInterfac
 
 class SampleBackupResultsHandler implements BackupResultsHandler
 {
+
+    private final static Logger logger = LoggerFactory.getLogger(SampleBackupResultsHandler.class);
+
     @Override
     public void run()
     {
-        System.out.println("BackupEvents:SampleBackupResultsHandler:run has been called");
+        logger.info("BackupEvents:SampleBackupResultsHandler:run has been called");
     }
 
     @Override
     public void setQueue(final LinkedBlockingQueue<VMBackupStatusList> queue)
     {
-        System.out.println("BackupEvents:SampleBackupResultsHandler:setQueue has been called");
+        logger.info("BackupEvents:SampleBackupResultsHandler:setQueue has been called");
     }
 
     @Override
@@ -104,8 +110,7 @@ class SampleBackupResultsHandler implements BackupResultsHandler
     @Override
     public void setRestoreQueue(final LinkedBlockingQueue<VMRestoreStatusList> restoreQueue)
     {
-        System.out
-            .println("BackupEvents:SampleBackupResultsHandler:setRestoreQueue has been called");
+        logger.info("BackupEvents:SampleBackupResultsHandler:setRestoreQueue has been called");
 
     }
 }
