@@ -36,6 +36,12 @@
         <name>Abiquo Holdings S.L.</name>
         <url>http://www.abiquo.com</url>
     </organization>
+    <scm>
+        <url>https://github.com/abiquo/abiquo-api-outbound-java-client</url>
+        <connection>https://github.com/abiquo/abiquo-api-outbound-java-client.git</connection>
+        <developerConnection>scm:git:git@github.com:abiquo/abiquo-api-outbound-java-client.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
     <build>
         <plugins>
             <plugin>
