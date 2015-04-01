@@ -74,8 +74,8 @@ public class APIConnection
         client = builder.build();
         client.register(new HttpBasicAuthFilter(user, password));
         client.register(JacksonFeature.class);
-        logger.debug("Connecting to: http://{}/api", server);
-        targetAPIBase = client.target("http://" + server + "/api");
+        logger.debug("Connecting to: {}/api", server);
+        targetAPIBase = client.target(server + "/api");
     }
 
     /**

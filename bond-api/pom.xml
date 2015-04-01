@@ -45,6 +45,12 @@
             <groupId>com.abiquo</groupId>
             <artifactId>api-model-transport</artifactId>
             <version>${apimodel.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>

@@ -92,7 +92,7 @@ public class WAsyncConnector implements MConnector
 
         AtmosphereClient client = ClientFactory.getDefault().newClient(AtmosphereClient.class);
 
-        String url = "http://" + server + "/m/stream?Content-Type=application/json";
+        String url = server + "/m/stream?Content-Type=application/json";
         AtmosphereRequest.AtmosphereRequestBuilder requestbuilder =
             client.newRequestBuilder().method(Request.METHOD.GET).uri(url)
                 .transport(Request.TRANSPORT.SSE);
