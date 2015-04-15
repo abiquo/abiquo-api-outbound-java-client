@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.abiquo</groupId>
     <artifactId>abiquo-api-outbound-java-client</artifactId>
-    <version>2.6.1-SNAPSHOT</version>
+    <version>2.6.1</version>
     <name>Bond Outbound API Client Open Source Code</name>
     <packaging>pom</packaging>
     <modules>
