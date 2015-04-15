@@ -20,8 +20,9 @@
  */
 package com.abiquo.bond.api.plugin;
 
+import static java.lang.String.format;
+
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,6 +65,7 @@ public abstract class AbstractPlugin implements PluginInterface
      * methods in the class that can be used to handle events.
      */
     static private Map<Class< ? >, Class< ? >> mapAnnotationToEvent = new HashMap<>();
+
     static
     {
         mapAnnotationToEvent.put(HandleBackupVMEvent.class, BackupVMEvent.class);
@@ -71,6 +73,8 @@ public abstract class AbstractPlugin implements PluginInterface
         mapAnnotationToEvent.put(HandleUndeployVMEvent.class, UndeployVMEvent.class);
         mapAnnotationToEvent.put(HandleRestoreVMEvent.class, RestoreVMEvent.class);
         mapAnnotationToEvent.put(HandleAnyEvent.class, APIEvent.class);
+        // TODO investigate what happens adding this line (SCG SAN)
+        // mapAnnotationToEvent.put(HandleAnyEvent.class, APIEventResult.class);
     }
 
     private Map<Class< ? extends APIEvent>, Method> mapEventToMethod = new HashMap<>();
@@ -181,33 +185,11 @@ public abstract class AbstractPlugin implements PluginInterface
                 eventhandler.invoke(this, new Object[] {event});
                 result = new APIEventResult(APIEventResultState.COMPLETE, event);
             }
-            catch (IllegalAccessException | IllegalArgumentException e)
-            {
-                notifyWrapper(
-                    "Plugin failed to invoke correct method to process event " + event.toString(),
-                    e);
-                result =
-                    new APIEventResult(APIEventResultState.FAILED,
-                        event,
-                        "Plugin failed to invoke correct method to process event",
-                        e);
-            }
-            catch (InvocationTargetException e)
-            {
-                notifyWrapper("Event handler method threw an exception: " + event.toString(), e);
-                result =
-                    new APIEventResult(APIEventResultState.FAILED,
-                        event,
-                        "Event handler method threw an exception",
-                        e);
-            }
             catch (Throwable t)
             {
-                result =
-                    new APIEventResult(APIEventResultState.FAILED,
-                        event,
-                        "Error processing event",
-                        t);
+                String msg = format("Error processing event: %s", event.toString());
+                notifyWrapper(msg, t);
+                result = new APIEventResult(APIEventResultState.FAILED, event, msg, t);
             }
         }
         else

@@ -111,6 +111,5 @@ class SampleBackupResultsHandler implements BackupResultsHandler
     public void setRestoreQueue(final LinkedBlockingQueue<VMRestoreStatusList> restoreQueue)
     {
         logger.info("BackupEvents:SampleBackupResultsHandler:setRestoreQueue has been called");
-
     }
 }
