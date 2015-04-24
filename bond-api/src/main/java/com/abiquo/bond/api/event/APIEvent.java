@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import com.abiquo.event.model.Event;
 import com.abiquo.server.core.event.EventDto;
+import com.google.common.base.Objects;
+import com.google.common.base.Objects.ToStringHelper;
 
 /**
  * Generic class for representing events received from the M server or event store that don't
@@ -86,14 +88,31 @@ public class APIEvent implements Comparable<APIEvent>
     @Override
     public String toString()
     {
-        StringBuilder sb =
-            new StringBuilder(this.getClass().getName()).append(" ts:").append(timestamp);
-        return sb.toString();
+        return eventDtoToString(eventToString(Objects.toStringHelper(this))).toString();
     }
 
     @Override
     public int compareTo(final APIEvent other)
     {
         return timestamp.compareTo(other.timestamp);
+    }
+
+    private ToStringHelper eventToString(final ToStringHelper helper)
+    {
+        return helper.add("from", originalEvent.getClass().getCanonicalName())
+            .add("enitity id", originalEvent.getEntityIdentifier())
+            .add("type", originalEvent.getType()).add("action", originalEvent.getAction())
+            .add("severity", originalEvent.getSeverity()).add("user", originalEvent.getUser())
+            .omitNullValues();
+    }
+
+    private ToStringHelper eventDtoToString(final ToStringHelper helper)
+    {
+        return helper.add("from", originalEventDto.getClass().getCanonicalName())
+            .add("action performed", originalEventDto.getActionPerformed())
+            .add("entity id", originalEventDto.getEntityId())
+            .add("virtual machine", originalEventDto.getIdVirtualMachine())
+            .add("performed by", originalEventDto.getUser()) //
+            .omitNullValues();
     }
 }

@@ -180,7 +180,7 @@ public class VirtualMachineEvent extends APIEvent
     public String toString()
     {
         StringBuilder sb = new StringBuilder(super.toString());
-        sb.append(" vm:").append(vmname);
+        sb.append(" for vm:").append(vmname);
         return sb.toString();
     }
 
