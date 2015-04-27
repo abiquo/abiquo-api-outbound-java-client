@@ -88,7 +88,15 @@ public class APIEvent implements Comparable<APIEvent>
     @Override
     public String toString()
     {
-        return eventDtoToString(eventToString(Objects.toStringHelper(this))).toString();
+        if (originalEvent != null)
+        {
+            return eventToString(Objects.toStringHelper(this)).toString();
+        }
+        if (originalEvent != null)
+        {
+            return eventDtoToString(Objects.toStringHelper(this)).toString();
+        }
+        return Objects.toStringHelper(this).toString();
     }
 
     @Override
