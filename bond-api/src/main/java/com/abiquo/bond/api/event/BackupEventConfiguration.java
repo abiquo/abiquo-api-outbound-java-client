@@ -20,11 +20,11 @@
  */
 package com.abiquo.bond.api.event;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -47,9 +47,9 @@ public class BackupEventConfiguration
 
     private final static Logger logger = LoggerFactory.getLogger(BackupEventConfiguration.class);
 
-    private static DateFormat df = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
+    private static DateTimeFormatter df = DateTimeFormatter.ofPattern(VMMetadata.DATE_FORMAT);
 
-    private static DateFormat tf = new SimpleDateFormat(VMMetadata.TIME_FORMAT);
+    private static DateTimeFormatter tf = DateTimeFormatter.ofPattern(VMMetadata.TIME_FORMAT);
 
     private BackupDetailsDate definedhour;
 
@@ -172,7 +172,7 @@ public class BackupEventConfiguration
         return false;
     }
 
-    public Optional<Date> getDefinedHourDateAndTime()
+    public Optional<ZonedDateTime> getDefinedHourDateAndTime()
     {
         if (definedhour != null)
         {
@@ -217,7 +217,7 @@ public class BackupEventConfiguration
         return VALUE_NOT_SET;
     }
 
-    public Optional<Date> getDailyTime()
+    public Optional<OffsetTime> getDailyTime()
     {
         if (daily != null)
         {
@@ -231,7 +231,7 @@ public class BackupEventConfiguration
         return getTimeAsText(daily);
     }
 
-    public Optional<Date> getWeeklyTime()
+    public Optional<OffsetTime> getWeeklyTime()
     {
         if (weekly_planned != null)
         {
@@ -245,7 +245,7 @@ public class BackupEventConfiguration
         return getTimeAsText(weekly_planned);
     }
 
-    public Optional<Date> getMonthlyTime()
+    public Optional<OffsetTime> getMonthlyTime()
     {
         if (monthly != null)
         {
@@ -316,16 +316,16 @@ public class BackupEventConfiguration
 
     public class BackupDetailsTime extends BackupDetails
     {
-        Date time;
+        OffsetTime time;
 
         BackupDetailsTime(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
             String timesetting = (String) settings.get(VMMetadata.TIME);
-            time = tf.parse(timesetting);
+            time = OffsetTime.parse(timesetting, tf);
         }
 
-        public Date getTime()
+        public OffsetTime getTime()
         {
             return time;
         }
@@ -333,16 +333,16 @@ public class BackupEventConfiguration
 
     public class BackupDetailsDate extends BackupDetails
     {
-        Date dateandtime;
+        ZonedDateTime dateandtime;
 
         BackupDetailsDate(final Map<String, Object> settings) throws ParseException
         {
             super(settings);
             String datesetting = (String) settings.get(VMMetadata.TIME);
-            dateandtime = df.parse(datesetting);
+            dateandtime = ZonedDateTime.parse(datesetting, df);
         }
 
-        public Date getDateAndTime()
+        public ZonedDateTime getDateAndTime()
         {
             return dateandtime;
         }

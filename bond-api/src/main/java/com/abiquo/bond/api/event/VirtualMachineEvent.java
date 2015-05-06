@@ -251,19 +251,20 @@ public class VirtualMachineEvent extends APIEvent
                 switch (bt)
                 {
                     case COMPLETE:
-                        if (bcComplete.isConfigured(acceptableConfigurations))
+                        if (bcComplete != null && bcComplete.isConfigured(acceptableConfigurations))
                         {
                             return true;
                         }
                         break;
                     case FILESYSTEM:
-                        if (bcFileSystem.isConfigured(acceptableConfigurations))
+                        if (bcFileSystem != null
+                            && bcFileSystem.isConfigured(acceptableConfigurations))
                         {
                             return true;
                         }
                         break;
                     case SNAPSHOT:
-                        if (bcSnapshot.isConfigured(acceptableConfigurations))
+                        if (bcSnapshot != null && bcSnapshot.isConfigured(acceptableConfigurations))
                         {
                             return true;
                         }

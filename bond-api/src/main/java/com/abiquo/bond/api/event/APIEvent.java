@@ -108,7 +108,7 @@ public class APIEvent implements Comparable<APIEvent>
     private ToStringHelper eventToString(final ToStringHelper helper)
     {
         return helper.add("from", originalEvent.getClass().getCanonicalName())
-            .add("enitity id", originalEvent.getEntityIdentifier())
+            .add("entity id", originalEvent.getEntityIdentifier())
             .add("type", originalEvent.getType()).add("action", originalEvent.getAction())
             .add("severity", originalEvent.getSeverity()).add("user", originalEvent.getUser())
             .omitNullValues();
