@@ -9,7 +9,6 @@
     <modules>
         <module>bond-api</module>
         <module>bond-plugins-open</module>
-        <module>bond-wrapper-sample</module>
     </modules>
     <properties>
         <!-- Build properties -->
