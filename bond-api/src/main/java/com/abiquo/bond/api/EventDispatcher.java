@@ -20,11 +20,10 @@
  */
 package com.abiquo.bond.api;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +53,7 @@ public class EventDispatcher
 
     private final Set<PluginInterface> plugins;
 
-    private Date lastEventTimestamp;
+    private LocalDateTime lastEventTimestamp;
 
     public EventDispatcher(final Set<PluginInterface> plugins, final int numThreads)
     {
@@ -78,14 +77,7 @@ public class EventDispatcher
             if (plugin.handlesEventType(event.getClass()))
             {
                 ListenableFuture<APIEventResult> task =
-                    eventDispatcher.submit(new Callable<APIEventResult>()
-                    {
-                        @Override
-                        public APIEventResult call()
-                        {
-                            return plugin.processEvent(event);
-                        }
-                    });
+                    eventDispatcher.submit(() -> plugin.processEvent(event));
                 futures.add(task);
             }
         }
@@ -101,10 +93,10 @@ public class EventDispatcher
                     {
                         for (APIEventResult result : results)
                         {
-                            Date eventts = result.getEvent().getTimestamp();
-                            if (lastEventTimestamp == null || lastEventTimestamp.before(eventts))
+                            LocalDateTime eventTs = result.getEvent().getTimestamp();
+                            if (lastEventTimestamp == null || lastEventTimestamp.isBefore(eventTs))
                             {
-                                lastEventTimestamp = eventts;
+                                lastEventTimestamp = eventTs;
                                 logger.info("Last event timestamp updated to {}",
                                     lastEventTimestamp);
                             }
@@ -121,9 +113,9 @@ public class EventDispatcher
                             Optional<APIEvent> optEvent = pee.getAPIEvent();
                             if (optEvent.isPresent())
                             {
-                                Date eventts = optEvent.get().getTimestamp();
+                                LocalDateTime eventts = optEvent.get().getTimestamp();
                                 if (lastEventTimestamp == null
-                                    || lastEventTimestamp.before(eventts))
+                                    || lastEventTimestamp.isBefore(eventts))
                                 {
                                     lastEventTimestamp = eventts;
                                 }
@@ -149,7 +141,7 @@ public class EventDispatcher
      * 
      * @return
      */
-    public Date getLastEventTimestamp()
+    public LocalDateTime getLastEventTimestamp()
     {
         return lastEventTimestamp;
     }

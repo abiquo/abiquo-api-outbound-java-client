@@ -20,10 +20,10 @@
  */
 package com.abiquo.bond.api.event;
 
-import java.util.Date;
+import static com.abiquo.bond.api.util.DateUtils.fromDate;
+import static com.abiquo.bond.api.util.DateUtils.fromEpochMilliseconds;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
 
 import com.abiquo.event.model.Event;
 import com.abiquo.server.core.event.EventDto;
@@ -36,13 +36,12 @@ import com.google.common.base.Objects.ToStringHelper;
  */
 public class APIEvent implements Comparable<APIEvent>
 {
-    private final static Logger logger = LoggerFactory.getLogger(APIEvent.class);
 
     private Event originalEvent;
 
     private EventDto originalEventDto;
 
-    private Date timestamp;
+    private LocalDateTime timestamp;
 
     /**
      * As this is a handler for generic events, it simple stores a reference to the original
@@ -54,7 +53,7 @@ public class APIEvent implements Comparable<APIEvent>
     public APIEvent(final Event event)
     {
         originalEvent = event;
-        timestamp = new Date(event.getTimestamp());
+        timestamp = fromEpochMilliseconds(event.getTimestamp());
     }
 
     /**
@@ -67,10 +66,10 @@ public class APIEvent implements Comparable<APIEvent>
     public APIEvent(final EventDto event)
     {
         originalEventDto = event;
-        timestamp = event.getTimestamp();
+        timestamp = fromDate(event.getTimestamp());
     }
 
-    public Date getTimestamp()
+    public LocalDateTime getTimestamp()
     {
         return timestamp;
     }

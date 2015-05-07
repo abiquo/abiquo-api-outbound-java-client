@@ -20,7 +20,7 @@
  */
 package com.abiquo.bond.api;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +82,7 @@ public class ConfigurationData
      * when it starts up to fetch any missed messages since the last time it ran. If this value is
      * not set no events will be retrieved from the event store.
      */
-    private Date lastProcessedEvent;
+    private LocalDateTime lastProcessedEvent;
 
     /**
      * Constructor that sets values for the server, user name and password and uses default values
@@ -184,12 +184,12 @@ public class ConfigurationData
         return connectorname;
     }
 
-    public Date getLastProcessedEvent()
+    public LocalDateTime getLastProcessedEvent()
     {
         return lastProcessedEvent;
     }
 
-    public void setLastProcessedEvent(final Date date)
+    public void setLastProcessedEvent(final LocalDateTime date)
     {
         logger.debug("Setting last processed event date to {}", date);
         lastProcessedEvent = date;

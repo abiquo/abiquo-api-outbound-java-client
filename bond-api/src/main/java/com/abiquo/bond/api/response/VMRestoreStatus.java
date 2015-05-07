@@ -21,7 +21,7 @@
 package com.abiquo.bond.api.response;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
 
     private String type = "complete";
 
-    private Date date;
+    private LocalDateTime date;
 
     private long size;
 
@@ -76,7 +76,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
         this.type = type;
     }
 
-    public void setDate(final Date date)
+    public void setDate(final LocalDateTime date)
     {
         this.date = date;
     }
@@ -94,7 +94,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
     @Override
     public int compareTo(final VMRestoreStatus o)
     {
-        return (int) (date.getTime() - o.date.getTime());
+        return date.compareTo(o.date);
     }
 
     public String getVmRestorePoint()
@@ -102,7 +102,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
         return vmRestorePoint;
     }
 
-    public void setVmRestorePoint(String vmRestorePoint)
+    public void setVmRestorePoint(final String vmRestorePoint)
     {
         this.vmRestorePoint = vmRestorePoint;
     }

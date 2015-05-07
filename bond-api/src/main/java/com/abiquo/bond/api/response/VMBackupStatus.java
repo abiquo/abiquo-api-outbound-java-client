@@ -20,8 +20,8 @@
  */
 package com.abiquo.bond.api.response;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +34,8 @@ import com.abiquo.bond.api.abqapi.VMMetadata;
  */
 public class VMBackupStatus implements Comparable<VMBackupStatus>
 {
-    private static SimpleDateFormat dateformat = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
+    private static DateTimeFormatter dateformat = DateTimeFormatter
+        .ofPattern(VMMetadata.DATE_FORMAT);
 
     private String reason;
 
@@ -44,7 +45,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
 
     private String type = "complete";
 
-    private Date date;
+    private LocalDateTime date;
 
     private long size;
 
@@ -87,7 +88,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         this.type = type;
     }
 
-    public void setDate(final Date date)
+    public void setDate(final LocalDateTime date)
     {
         this.date = date;
     }
@@ -105,7 +106,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     @Override
     public int compareTo(final VMBackupStatus o)
     {
-        return (int) (date.getTime() - o.date.getTime());
+        return date.compareTo(o.date);
     }
 
     public String getVmRestorePoint()

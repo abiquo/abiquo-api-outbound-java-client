@@ -22,9 +22,11 @@ package com.abiquo.bond.api;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -232,7 +234,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      * 
      * @return Timestamp of last processed outbound api event
      */
-    public Date getLastEventTimestamp()
+    public LocalDateTime getLastEventTimestamp()
     {
         return eventDispatcher.getLastEventTimestamp();
     }
@@ -320,7 +322,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
             eventstore.setMsgTimeLimit();
 
             // Check the Event log for any messages missed since the program last ran
-            Date lastmsg = config.getLastProcessedEvent();
+            LocalDateTime lastmsg = config.getLastProcessedEvent();
             if (lastmsg != null)
             {
                 eventstore.getMissedEvents(lastmsg, this);
@@ -392,8 +394,13 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
         try
         {
             Event event = AbiquoObjectMapper.OBJECT_MAPPER.instance().readValue(msg, Event.class);
-            logger.debug("Received event: Type:{} Action:{} Time:{}", new Object[] {
-            event.getType(), event.getAction(), event.getTimestamp()});
+            logger.debug(
+                "Received event: Type:{} Action:{} Time:{}",
+                new Object[] {
+                event.getType(),
+                event.getAction(),
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimestamp()),
+                    ZoneId.systemDefault())});
             Optional<APIEvent> optapievent = translator.translate(event);
             if (optapievent.isPresent())
             {

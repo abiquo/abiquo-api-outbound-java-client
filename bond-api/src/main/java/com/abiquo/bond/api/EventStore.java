@@ -20,9 +20,11 @@
  */
 package com.abiquo.bond.api;
 
+import static com.abiquo.bond.api.util.DateUtils.fromDate;
 import static com.abiquo.event.model.enumerations.EntityAction.VIRTUAL_MACHINE.UNDEPLOY;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +63,7 @@ public class EventStore extends APIConnection
 
     private WebTarget targetEventBase;
 
-    private Date msgTimeLimit = new Date();
+    private LocalDateTime msgTimeLimit = LocalDateTime.now();
 
     private int currUserEnterpriseId = -1;
 
@@ -110,7 +112,7 @@ public class EventStore extends APIConnection
      */
     public void setMsgTimeLimit()
     {
-        msgTimeLimit = new Date();
+        msgTimeLimit = LocalDateTime.now();
         logger.debug("Only processing messages before: {}", msgTimeLimit);
     }
 
@@ -122,11 +124,14 @@ public class EventStore extends APIConnection
      * @param handler reference to APIEvent handler
      * @throws OutboundAPIClientHTTPException
      */
-    public void getMissedEvents(final Date startdate, final EventStoreHandler handler)
+    public void getMissedEvents(final LocalDateTime startdate, final EventStoreHandler handler)
         throws OutboundAPIClientHTTPException
     {
-        String limitdate = Long.toString(startdate.getTime() / 1000);
-        logger.debug("Only processing messages after: {}", limitdate);
+        logger.debug("Only processing messages after: {}", startdate);
+
+        String limitdate =
+        // abiquo api gets the date in seconds!!
+            Long.toString(startdate.toEpochSecond(ZonedDateTime.now().getOffset()) / 1000);
 
         WebTarget targetVMsOnly =
             targetEventBase.queryParam("limit", "10").queryParam("asc", "true")
@@ -145,7 +150,8 @@ public class EventStore extends APIConnection
                 List<EventDto> events = resourceObject.getCollection();
                 for (EventDto event : events)
                 {
-                    if (event.getTimestamp().before(msgTimeLimit))
+                    LocalDateTime eventDate = fromDate(event.getTimestamp());
+                    if (eventDate.isBefore(msgTimeLimit))
                     {
                         logger.debug(
                             "Processing event: ts:{} component:{} action:{}",
