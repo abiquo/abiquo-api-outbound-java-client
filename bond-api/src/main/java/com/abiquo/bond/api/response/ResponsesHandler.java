@@ -147,21 +147,31 @@ public class ResponsesHandler extends APIConnection implements Runnable
                             List<Map<String, Object>> resultslist = new ArrayList<>();
                             for (VMBackupStatus status : event.getStatuses())
                             {
-                                Map<String, Object> resultsMap = status.getMetaData();
-                                for (VMRestoreStatus restoreStatus : restore.getStatuses())
+
+                                if (restore.getStatuses().isEmpty())
                                 {
-                                    if (status.getVmRestorePoint().equals(
-                                        restoreStatus.getVmRestorePoint()))
-                                    {
-                                        resultsMap.put(VMMetadata.RESTORE, "requested");
-                                        restoreStatus.setName(status.getMetaData()
-                                            .get(VMMetadata.NAME).toString());
-                                        restoreStatus.setSize((long) status.getMetaData().get(
-                                            VMMetadata.SIZE));
-                                        resultsMap.put("restoreInfo", restoreStatus.getMetaData());
-                                    }
+                                    resultslist.add(status.getMetaData());
                                 }
-                                resultslist.add(resultsMap);
+                                else
+                                {
+                                    Map<String, Object> resultsMap = status.getMetaData();
+
+                                    for (VMRestoreStatus restoreStatus : restore.getStatuses())
+                                    {
+                                        if (status.getVmRestorePoint().equals(
+                                            restoreStatus.getVmRestorePoint()))
+                                        {
+                                            resultsMap.put(VMMetadata.RESTORE, "requested");
+                                            restoreStatus.setName(status.getMetaData()
+                                                .get(VMMetadata.NAME).toString());
+                                            restoreStatus.setSize((long) status.getMetaData().get(
+                                                VMMetadata.SIZE));
+                                            resultsMap.put("restoreInfo",
+                                                restoreStatus.getMetaData());
+                                        }
+                                    }
+                                    resultslist.add(resultsMap);
+                                }
                             }
 
                             Map<String, Object> backupResults = new HashMap<>();
