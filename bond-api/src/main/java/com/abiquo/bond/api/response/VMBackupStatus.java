@@ -20,7 +20,7 @@
  */
 package com.abiquo.bond.api.response;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +34,8 @@ import com.abiquo.bond.api.abqapi.VMMetadata;
  */
 public class VMBackupStatus implements Comparable<VMBackupStatus>
 {
-    private static DateTimeFormatter dateformat = DateTimeFormatter
-        .ofPattern(VMMetadata.DATE_FORMAT);
+    public static DateTimeFormatter dateFormatter = DateTimeFormatter
+        .ofPattern(VMMetadata.DATE_FORMAT);// "yyyy/MM/dd HH:mm:ss Z"
 
     private String reason;
 
@@ -45,7 +45,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
 
     private String type = "complete";
 
-    private LocalDateTime date;
+    private ZonedDateTime date;
 
     private long size;
 
@@ -62,7 +62,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     {
         Map<String, Object> metadata = new HashMap<>();
 
-        metadata.put(VMMetadata.DATE, dateformat.format(date));
+        metadata.put(VMMetadata.DATE, date.format(dateFormatter));
         metadata.put("status", state.toString());
         metadata.put("name", name);
         metadata.put("size", size);
@@ -88,7 +88,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         this.type = type;
     }
 
-    public void setDate(final LocalDateTime date)
+    public void setDate(final ZonedDateTime date)
     {
         this.date = date;
     }

@@ -23,6 +23,7 @@ package com.abiquo.bond.api.util;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 public class DateUtils
@@ -37,6 +38,16 @@ public class DateUtils
     public static LocalDateTime fromDate(final Date date)
     {
         return fromEpochMilliseconds(date.getTime());
+    }
+
+    public static ZonedDateTime fromEpochMillisecondsZoned(final Long fromEpoch, final ZoneId zoneId)
+    {
+        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(fromEpoch), zoneId);
+    }
+
+    public static ZonedDateTime fromDateZoned(final Date date, final ZoneId zoneId)
+    {
+        return fromEpochMillisecondsZoned(date.getTime(), zoneId);
     }
 
 }

@@ -113,16 +113,25 @@ public class ResponsesHandler extends APIConnection implements Runnable
         {
             try
             {
-                VMRestoreStatusList restore = restorequeue.take();
+                List<VMRestoreStatus> restoreStatuses = new ArrayList<>();
                 VMBackupStatusList event = resultqueue.take();
+                List<VMBackupStatus> backupStatuses = event.getStatuses();
+                String vmName = event.getVMName();
+                logger.debug("Backup result took for vm {}", vmName);
+                if (!restorequeue.isEmpty())
+                {
+                    VMRestoreStatusList restoreEvent = restorequeue.take();
+                    restoreStatuses = restoreEvent.getStatuses();
+                    logger.debug("Restore result took for vm {}", restoreEvent.getVMName());
+                }
 
                 Optional<RESTLink> optlink =
-                    mapNameToVMLinks.getLink(event.getVMName(), NameToVMLinks.VM_LINK_METADATA);
+                    mapNameToVMLinks.getLink(vmName, NameToVMLinks.VM_LINK_METADATA);
 
                 if (optlink.isPresent())
                 {
                     RESTLink link = optlink.get();
-                    logger.debug("Results from backup of virtual machine {}", event.getVMName());
+                    logger.debug("Results from backup of virtual machine {}", vmName);
                     WebTarget targetMetaData = client.target(link.getHref());
                     Invocation.Builder invocationBuilderMeta =
                         targetMetaData.request(MetadataDto.MEDIA_TYPE);
@@ -145,10 +154,10 @@ public class ResponsesHandler extends APIConnection implements Runnable
                             }
 
                             List<Map<String, Object>> resultslist = new ArrayList<>();
-                            for (VMBackupStatus status : event.getStatuses())
+                            for (VMBackupStatus status : backupStatuses)
                             {
 
-                                if (restore.getStatuses().isEmpty())
+                                if (restoreStatuses.isEmpty())
                                 {
                                     resultslist.add(status.getMetaData());
                                 }
@@ -156,7 +165,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
                                 {
                                     Map<String, Object> resultsMap = status.getMetaData();
 
-                                    for (VMRestoreStatus restoreStatus : restore.getStatuses())
+                                    for (VMRestoreStatus restoreStatus : restoreStatuses)
                                     {
                                         if (status.getVmRestorePoint().equals(
                                             restoreStatus.getVmRestorePoint()))
@@ -188,30 +197,38 @@ public class ResponsesHandler extends APIConnection implements Runnable
                             int status = response.getStatus();
                             if (status == 200)
                             {
-                                logger.debug("Backup status for vm {} updated successfully",
-                                    event.getVMName());
+                                logger
+                                    .debug("Backup status for vm {} updated successfully", vmName);
+                            }
+                            else
+                            {
+                                logger.error(
+                                    "Error occurred while updating the metadata of vm {}: {}",
+                                    vmName, response.getStatusInfo().getReasonPhrase());
                             }
                         }
                         else
                         {
-                            logger.error("Failed to update backup status for vm {}",
-                                event.getVMName());
+                            logger.error("Failed to update backup status for vm {}", vmName);
                             wrapperNotifications.notification("Failed to update backup status of "
-                                + event.getVMName(), link.getHref(), statusMeta);
+                                + vmName, link.getHref(), statusMeta);
                         }
                     }
                     else
                     {
-                        logger.error("Failed to retrieve current metadata for vm {}",
-                            event.getVMName());
+                        logger.error("Failed to retrieve current metadata for vm {}", vmName);
                         wrapperNotifications.notification("Failed to retrieve current metadata",
                             link.getHref(), statusMeta);
                     }
                 }
+                else
+                {
+                    logger.error("No metadata link found for vm {} in handler response", vmName);
+                }
             }
-            catch (InterruptedException e)
+            catch (Throwable t)
             {
-                logger.info("Response handler queue interrupted.");
+                logger.error("Response handler error.", t);
             }
         }
     }

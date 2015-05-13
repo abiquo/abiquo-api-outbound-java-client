@@ -20,8 +20,7 @@
  */
 package com.abiquo.bond.api.response;
 
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,13 +33,11 @@ import com.abiquo.bond.api.abqapi.VMMetadata;
  */
 public class VMRestoreStatus implements Comparable<VMRestoreStatus>
 {
-    private static SimpleDateFormat dateformat = new SimpleDateFormat(VMMetadata.DATE_FORMAT);
-
     private String name;
 
     private String type = "complete";
 
-    private LocalDateTime date;
+    private ZonedDateTime date;
 
     private long size;
 
@@ -57,7 +54,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
     {
         Map<String, Object> metadata = new HashMap<>();
 
-        metadata.put(VMMetadata.DATE, dateformat.format(date));
+        metadata.put(VMMetadata.DATE, date.format(VMBackupStatus.dateFormatter));
         metadata.put("name", name);
         metadata.put("size", size);
         metadata.put("type", type);
@@ -76,7 +73,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
         this.type = type;
     }
 
-    public void setDate(final LocalDateTime date)
+    public void setDate(final ZonedDateTime date)
     {
         this.date = date;
     }
