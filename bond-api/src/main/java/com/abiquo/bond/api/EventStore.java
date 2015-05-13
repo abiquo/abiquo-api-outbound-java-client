@@ -129,9 +129,7 @@ public class EventStore extends APIConnection
     {
         logger.debug("Only processing messages after: {}", startdate);
 
-        String limitdate =
-        // abiquo api gets the date in seconds!!
-            Long.toString(startdate.toEpochSecond(ZonedDateTime.now().getOffset()) / 1000);
+        String limitdate = Long.toString(startdate.toEpochSecond(ZonedDateTime.now().getOffset()));
 
         WebTarget targetVMsOnly =
             targetEventBase.queryParam("limit", "10").queryParam("asc", "true")
