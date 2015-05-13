@@ -92,14 +92,14 @@ public class NameToVMLinks extends APIConnection
     {
         if (vmdetails != null)
         {
-            logger.debug("Adding links for {}", vmdetails.getName());
+            logger.trace("Adding links for {}", vmdetails.getName());
             Map<String, RESTLink> supported = new HashMap<>();
             for (String supportedRel : supportedLinks)
             {
                 RESTLink link = vmdetails.searchLink(supportedRel);
                 if (link != null)
                 {
-                    logger.debug("Added {} link: {}", supportedRel, link.getHref());
+                    logger.trace("Added {} link: {}", supportedRel, link.getHref());
                     supported.put(supportedRel, link);
                 }
             }
@@ -127,14 +127,14 @@ public class NameToVMLinks extends APIConnection
     {
         if (vmdetails != null)
         {
-            logger.debug("Updating links for {}", vmdetails.getName());
+            logger.trace("Updating links for {}", vmdetails.getName());
             Map<String, RESTLink> supported = new HashMap<>();
             for (String supportedRel : links)
             {
                 RESTLink link = vmdetails.searchLink(supportedRel);
                 if (link != null)
                 {
-                    logger.debug("Added {} link: {}", supportedRel, link.getHref());
+                    logger.trace("Added {} link: {}", supportedRel, link.getHref());
                     supported.put(supportedRel, link);
                 }
             }

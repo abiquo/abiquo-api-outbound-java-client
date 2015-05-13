@@ -100,7 +100,7 @@ public class ResourceExpander extends APIConnection
         UserDto user = (UserDto) expandResource(resource, UserDto.MEDIA_TYPE_JSON, UserDto.class);
         if (user != null)
         {
-            logger.debug("UserDto: id:{} name:{}", user.getId(), user.getName());
+            logger.trace("UserDto: id:{} name:{}", user.getId(), user.getName());
         }
         return user;
     }
@@ -120,7 +120,7 @@ public class ResourceExpander extends APIConnection
                 EnterpriseDto.class);
         if (enterprise != null)
         {
-            logger.debug("EnterpriseDto: id:{} name:{}", enterprise.getId(), enterprise.getName());
+            logger.trace("EnterpriseDto: id:{} name:{}", enterprise.getId(), enterprise.getName());
         }
         return enterprise;
     }
@@ -140,7 +140,7 @@ public class ResourceExpander extends APIConnection
                 VirtualMachineDto.class);
         if (vm != null)
         {
-            logger.debug("VirtualMachineDto: id:{} name:{}", vm.getId(), vm.getName());
+            logger.trace("VirtualMachineDto: id:{} name:{}", vm.getId(), vm.getName());
         }
         return vm;
     }
