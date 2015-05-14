@@ -45,6 +45,8 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
 
     private String vmRestorePoint;
 
+    private String resultId;
+
     public VMRestoreStatus()
     {
         // TODO Auto-generated constructor stub
@@ -102,6 +104,21 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
     public void setVmRestorePoint(final String vmRestorePoint)
     {
         this.vmRestorePoint = vmRestorePoint;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public String getResultId()
+    {
+        return resultId;
+    }
+
+    public void setResultId(final String resultId)
+    {
+        this.resultId = resultId;
     }
 
 }

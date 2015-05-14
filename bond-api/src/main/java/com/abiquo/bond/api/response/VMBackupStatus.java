@@ -119,4 +119,9 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         this.vmRestorePoint = vmRestorePoint;
     }
 
+    public String getName()
+    {
+        return name;
+    }
+
 }

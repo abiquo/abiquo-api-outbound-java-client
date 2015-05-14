@@ -46,6 +46,7 @@ import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.model.rest.RESTLink;
 import com.abiquo.server.core.cloud.MetadataDto;
 import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
 
 /**
  * Although the client is intended to handle outbound api events and pass them on to third party
@@ -65,9 +66,8 @@ public class ResponsesHandler extends APIConnection implements Runnable
 
     private NameToVMLinks mapNameToVMLinks;
 
-    private LinkedBlockingQueue<VMBackupStatusList> resultqueue = new LinkedBlockingQueue<>();
-
-    private LinkedBlockingQueue<VMRestoreStatusList> restorequeue = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<VMBackupRestorePairStatusList> resultQueue =
+        new LinkedBlockingQueue<>();
 
     private long timeperiod;
 
@@ -92,8 +92,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
         try
         {
             BackupResultsHandler handler = plugin.getResultsHandler();
-            handler.setQueue(resultqueue);
-            handler.setRestoreQueue(restorequeue);
+            handler.setQueue(resultQueue);
             handler.linkToVMCache(mapNameToVMLinks.getVMNames());
             resultsfetchers.add(scheduler.scheduleAtFixedRate(handler, 0, timeperiod, timeunit));
             logger.debug("Backup results handler {} running at {} {} intervals", new Object[] {
@@ -113,25 +112,15 @@ public class ResponsesHandler extends APIConnection implements Runnable
         {
             try
             {
-                List<VMRestoreStatus> restoreStatuses = new ArrayList<>();
-                VMBackupStatusList event = resultqueue.take();
-                List<VMBackupStatus> backupStatuses = event.getStatuses();
-                String vmName = event.getVMName();
-                logger.debug("Backup result took for vm {}", vmName);
-                if (!restorequeue.isEmpty())
-                {
-                    VMRestoreStatusList restoreEvent = restorequeue.take();
-                    restoreStatuses = restoreEvent.getStatuses();
-                    logger.debug("Restore result took for vm {}", restoreEvent.getVMName());
-                }
+                VMBackupRestorePairStatusList event = resultQueue.take();
 
+                String vmName = event.getVmName();
                 Optional<RESTLink> optlink =
                     mapNameToVMLinks.getLink(vmName, NameToVMLinks.VM_LINK_METADATA);
 
                 if (optlink.isPresent())
                 {
                     RESTLink link = optlink.get();
-                    logger.debug("Results from backup of virtual machine {}", vmName);
                     WebTarget targetMetaData = client.target(link.getHref());
                     Invocation.Builder invocationBuilderMeta =
                         targetMetaData.request(MetadataDto.MEDIA_TYPE);
@@ -145,66 +134,80 @@ public class ResponsesHandler extends APIConnection implements Runnable
                         if (metadata != null)
                         {
                             @SuppressWarnings("unchecked")
-                            Map<String, Object> mapMetadata =
+                            Map<String, Object> originalMetadata =
                                 (Map<String, Object>) metadata.get(VMMetadata.METADATA);
-                            if (mapMetadata == null)
+                            if (originalMetadata == null)
                             {
-                                mapMetadata = new HashMap<>();
-                                resourceObjectMeta.setMetadata(mapMetadata);
+                                originalMetadata = new HashMap<>();
                             }
 
                             List<Map<String, Object>> resultslist = new ArrayList<>();
-                            for (VMBackupStatus status : backupStatuses)
+
+                            for (VMBackupRestorePairStatus pairStatus : event.pairStatusesList)
                             {
 
-                                if (restoreStatuses.isEmpty())
+                                Map<String, Object> backupStatusMetadata =
+                                    pairStatus.backupStatus.getMetaData();
+
+                                if (pairStatus.restoreStatuses.isEmpty())
                                 {
-                                    resultslist.add(status.getMetaData());
+                                    resultslist.add(backupStatusMetadata);
                                 }
                                 else
                                 {
-                                    Map<String, Object> resultsMap = status.getMetaData();
-
-                                    for (VMRestoreStatus restoreStatus : restoreStatuses)
+                                    for (VMRestoreStatus restoreStatus : pairStatus.restoreStatuses)
+                                    // FIXME should be in a list, but what happens with UI?
                                     {
-                                        if (status.getVmRestorePoint().equals(
-                                            restoreStatus.getVmRestorePoint()))
-                                        {
-                                            resultsMap.put(VMMetadata.RESTORE, "requested");
-                                            restoreStatus.setName(status.getMetaData()
-                                                .get(VMMetadata.NAME).toString());
-                                            restoreStatus.setSize((long) status.getMetaData().get(
-                                                VMMetadata.SIZE));
-                                            resultsMap.put("restoreInfo",
-                                                restoreStatus.getMetaData());
-                                        }
+                                        backupStatusMetadata.put(VMMetadata.RESTORE, "requested");
+                                        restoreStatus.setName(backupStatusMetadata.get(
+                                            VMMetadata.NAME).toString());
+                                        restoreStatus.setSize((long) backupStatusMetadata
+                                            .get(VMMetadata.SIZE));
+                                        backupStatusMetadata.put("restoreInfo",
+                                            restoreStatus.getMetaData());
                                     }
-                                    resultslist.add(resultsMap);
+                                    resultslist.add(backupStatusMetadata);
                                 }
                             }
 
+                            Map<String, Object> resultsMetadata = Maps.newHashMap(originalMetadata);
                             Map<String, Object> backupResults = new HashMap<>();
                             backupResults.put(VMMetadata.RESULTS, resultslist);
+                            resultsMetadata.put(VMMetadata.LAST_BACKUPS, backupResults);
 
-                            mapMetadata.put(VMMetadata.LAST_BACKUPS, backupResults);
-
-                            WebTarget targetUpdate = client.target(link.getHref());
-                            Invocation.Builder invocationBuilder =
-                                targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_JSON);
-                            Response response =
-                                invocationBuilder.put(Entity.entity(resourceObjectMeta,
-                                    MetadataDto.SHORT_MEDIA_TYPE_JSON));
-                            int status = response.getStatus();
-                            if (status == 200)
+                            if (!originalMetadata.toString().equals(resultsMetadata.toString()))
                             {
-                                logger
-                                    .debug("Backup status for vm {} updated successfully", vmName);
+                                Map<String, Object> withMetadataTag = new HashMap<>();
+                                withMetadataTag.put(VMMetadata.METADATA, resultsMetadata);
+                                resourceObjectMeta.setMetadata(withMetadataTag);
+
+                                WebTarget targetUpdate = client.target(link.getHref());
+                                Invocation.Builder invocationBuilder =
+                                    targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_JSON);
+                                Response response =
+                                    invocationBuilder.put(Entity.entity(resourceObjectMeta,
+                                        MetadataDto.SHORT_MEDIA_TYPE_JSON));
+                                int status = response.getStatus();
+                                if (status == 200)
+                                {
+                                    logger
+                                        .debug(
+                                            "Backup/restore results status for vm {} updated successfully",
+                                            vmName);
+                                }
+                                else
+                                {
+                                    logger.error(
+                                        "Error occurred while updating the metadata of vm {}: {}",
+                                        vmName, response.getStatusInfo().getReasonPhrase());
+                                }
                             }
                             else
                             {
-                                logger.error(
-                                    "Error occurred while updating the metadata of vm {}: {}",
-                                    vmName, response.getStatusInfo().getReasonPhrase());
+                                logger
+                                    .debug(
+                                        "No changes from backup/restore of virtual machine {} detected. So no update is performed",
+                                        vmName);
                             }
                         }
                         else
@@ -232,4 +235,5 @@ public class ResponsesHandler extends APIConnection implements Runnable
             }
         }
     }
+
 }
