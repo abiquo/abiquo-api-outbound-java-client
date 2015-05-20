@@ -20,21 +20,27 @@
  */
 package com.abiquo.bond.api;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.model.rest.RESTLink;
 import com.abiquo.model.transport.SingleResourceTransportDto;
+import com.abiquo.model.transport.WrapperDto;
 import com.abiquo.server.core.cloud.VirtualMachineDto;
 import com.abiquo.server.core.cloud.VirtualMachinesDto;
 import com.abiquo.server.core.infrastructure.DatacenterDto;
@@ -44,6 +50,7 @@ import com.abiquo.server.core.infrastructure.MachinesDto;
 import com.abiquo.server.core.infrastructure.RackDto;
 import com.abiquo.server.core.infrastructure.RacksDto;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 
 /**
  * Class that maintains a mapping of the names of all the VMs deployed in Abiquo to their associated
@@ -152,95 +159,145 @@ public class NameToVMLinks extends APIConnection
         return mapVMtoLinks.keySet();
     }
 
+    /**
+     * Fetchs all vms to "cache"
+     */
     private void fetchAllVMs()
     {
-        WebTarget targetAllDCs =
-            targetAPIBase.path("admin").path("datacenters").queryParam("limit", "100");
-        while (targetAllDCs != null)
+        WebTarget targetAllDCs = targetAPIBase.path("admin").path("datacenters");
+        AutoPagginatedList<DatacentersDto, DatacenterDto> dcs =
+            new AutoPagginatedList<>(client, targetAllDCs.getUri().toString(), DatacentersDto.class);
+
+        List<VirtualMachineDto> retrievedVms = new ArrayList<>();
+        for (DatacenterDto dc : dcs)
         {
-            Invocation.Builder invocationBuilder = targetAllDCs.request(DatacentersDto.MEDIA_TYPE);
-            Response response = invocationBuilder.get();
-            int status = response.getStatus();
-            if (status == 200)
+            RESTLink racksLink =
+                checkNotNull(dc.searchLink("racks"),
+                    "Missing 'racks' link from datacenter %s. Should be here.", dc.getName());
+            AutoPagginatedList<RacksDto, RackDto> racks =
+                new AutoPagginatedList<>(client, racksLink.getHref(), RacksDto.class);
+            for (RackDto rack : racks)
             {
-                DatacentersDto resourceDCs = response.readEntity(DatacentersDto.class);
-                List<DatacenterDto> dclist = resourceDCs.getCollection();
-
-                for (DatacenterDto dc : dclist)
+                RESTLink machinesLink =
+                    checkNotNull(rack.searchLink("machines"),
+                        "Missing 'machines' link from rack %s. Should be here.", rack.getName());
+                AutoPagginatedList<MachinesDto, MachineDto> machines =
+                    new AutoPagginatedList<>(client, machinesLink.getHref(), MachinesDto.class);
+                for (MachineDto machine : machines)
                 {
-                    RESTLink rackslink = dc.searchLink("racks");
-                    if (rackslink != null)
-                    {
-                        response = getResource(rackslink);
-                        status = response.getStatus();
-                        if (status == 200)
-                        {
-                            RacksDto resourceRacks = response.readEntity(RacksDto.class);
-                            List<RackDto> racklist = resourceRacks.getCollection();
-
-                            for (RackDto rack : racklist)
-                            {
-                                RESTLink machineslink = rack.searchLink("machines");
-                                if (machineslink != null)
-                                {
-                                    response = getResource(machineslink);
-                                    status = response.getStatus();
-                                    if (status == 200)
-                                    {
-                                        MachinesDto resourceMachines =
-                                            response.readEntity(MachinesDto.class);
-                                        List<MachineDto> machinelist =
-                                            resourceMachines.getCollection();
-
-                                        for (MachineDto machine : machinelist)
-                                        {
-                                            RESTLink vmslink =
-                                                machine.searchLink("virtualmachines");
-                                            if (vmslink != null)
-                                            {
-                                                response = getResource(vmslink);
-                                                status = response.getStatus();
-                                                if (status == 200)
-                                                {
-                                                    VirtualMachinesDto resourceVMs =
-                                                        response
-                                                            .readEntity(VirtualMachinesDto.class);
-                                                    List<VirtualMachineDto> vmlist =
-                                                        resourceVMs.getCollection();
-
-                                                    for (VirtualMachineDto vm : vmlist)
-                                                    {
-                                                        addVM(vm);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    RESTLink vmsLink =
+                        checkNotNull(machine.searchLink("virtualmachines"),
+                            "Missing 'virtualmachines' link from machine %s (%s). Should be here.",
+                            machine.getName(), machine.getIp());
+                    AutoPagginatedList<VirtualMachinesDto, VirtualMachineDto> vms =
+                        new AutoPagginatedList<>(client,
+                            vmsLink.getHref(),
+                            VirtualMachinesDto.class);
+                    vms.forEach(retrievedVms::add);
                 }
-                targetAllDCs = getNextTarget(resourceDCs);
+            }
+        }
+        logger.debug("{} vms found in abiquo api while caching them", retrievedVms.size());
+        retrievedVms.forEach(this::addVM);
+
+    }
+
+    /**
+     * Iterable class that allows to iterate all elements from an Abiquo API resource with auto
+     * management of pagination.
+     * 
+     * @author scastro
+     * @param <E> Wrapper dto class that contains the collection of T, p.e: {@link DatacentersDto}
+     * @param <T> Dto class of each element of the iterable, p.e: {@link DatacenterDto}
+     */
+    static private class AutoPagginatedList<E extends WrapperDto<T>, T extends SingleResourceTransportDto>
+        implements Iterable<T>
+    {
+
+        private AutoPagginatedIterator<T> iterator;
+
+        public AutoPagginatedList(final Client client, final String uri,
+            final Class<E> wrapperDtoClass)
+        {
+            iterator = new AutoPagginatedIterator<>(client, uri, wrapperDtoClass);
+        }
+
+        @Override
+        public Iterator<T> iterator()
+        {
+            return iterator;
+        }
+
+        static private class AutoPagginatedIterator<A extends SingleResourceTransportDto>
+            implements Iterator<A>
+        {
+            private List<A> collection = null;
+
+            private int actualElement = 0;
+
+            private RESTLink nextLink = null;
+
+            private final String mediatype;
+
+            private final Client client;
+
+            private final Class< ? extends WrapperDto<A>> wrapperDtoClass;
+
+            public AutoPagginatedIterator(final Client client, final String uri,
+                final Class< ? extends WrapperDto<A>> wrapperDtoClass)
+            {
+                this.client = client;
+                this.wrapperDtoClass = wrapperDtoClass;
+                try
+                {
+                    mediatype =
+                        (String) wrapperDtoClass.getField("MEDIA_TYPE").get(wrapperDtoClass);
+                    doGet(uri);
+                }
+                catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
+                    | SecurityException e)
+                {
+                    throw Throwables.propagate(e);
+                }
+            }
+
+            private void doGet(final String uri)
+            {
+                Response response = client.target(uri).request(mediatype).get();
+                if (response.getStatus() == 200)
+                {
+                    WrapperDto<A> wrapperDto = response.readEntity(wrapperDtoClass);
+                    collection = wrapperDto.getCollection();
+                    nextLink = wrapperDto.searchLink("next");
+                }
+                else
+                {
+                    Throwables.propagate(new PluginException(format("Unable to retrieve %s: %s",
+                        uri, response.getStatusInfo().getReasonPhrase())));
+                }
+            }
+
+            @Override
+            public boolean hasNext()
+            {
+                return actualElement < collection.size() || nextLink != null;
+            }
+
+            @Override
+            public A next()
+            {
+                if (actualElement < collection.size())
+                {
+                    return collection.get(actualElement++);
+                }
+                else
+                {
+                    doGet(nextLink.getHref());
+                    actualElement = 0;
+                    return collection.get(actualElement++);
+                }
             }
         }
     }
 
-    private WebTarget getNextTarget(final SingleResourceTransportDto resource)
-    {
-        RESTLink nextlink = resource.searchLink("next");
-        if (nextlink != null)
-        {
-            return client.target(nextlink.getHref()).queryParam("limit", 100);
-        }
-        return null;
-    }
-
-    private Response getResource(final RESTLink link)
-    {
-        WebTarget target = client.target(link.getHref());
-        Invocation.Builder invocationBuilder = target.request(link.getType());
-        Response response = invocationBuilder.get();
-        return response;
-    }
 }

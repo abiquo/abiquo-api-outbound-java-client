@@ -20,6 +20,8 @@
  */
 package com.abiquo.bond.api.response;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -212,9 +214,15 @@ public class ResponsesHandler extends APIConnection implements Runnable
                         }
                         else
                         {
-                            logger.error("Failed to update backup status for vm {}", vmName);
-                            wrapperNotifications.notification("Failed to update backup status of "
-                                + vmName, link.getHref(), statusMeta);
+                            logger
+                                .error(
+                                    "Failed to update backup status for vm {} because original metadata is null",
+                                    vmName);
+                            wrapperNotifications
+                                .notification(
+                                    format(
+                                        "Failed to update backup status of %s because original metadata is null",
+                                        vmName), link.getHref(), statusMeta);
                         }
                     }
                     else
