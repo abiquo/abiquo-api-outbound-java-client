@@ -57,6 +57,8 @@ public class APIConnection
 
     protected WrapperNotification wrapperNotifications;
 
+    protected String version;
+
     /**
      * This constructor create a Client instance and a WebTarget instance representing the base URI
      * of the Abiquo API. Either of these can be used to create new WebTarget instances. The Client
@@ -149,5 +151,40 @@ public class APIConnection
                 targetAPIBase.getUri(),
                 response.getStatus());
         }
+    }
+
+    public String getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(final String version)
+    {
+        this.version = version;
+    }
+
+    /**
+     * Returns the API Version
+     * @return api version
+     * @throws OutboundAPIClientHTTPException
+     */
+    String getAPIVersion() throws OutboundAPIClientHTTPException
+    {
+        WebTarget targetVersion = targetAPIBase.path("version");
+        Invocation.Builder invocationBuilder = targetVersion.request("text/plain");
+        Response response = invocationBuilder.get();
+        int status = response.getStatus();
+        String apiVersion = "";
+        if (status == 200)
+        {
+            apiVersion = response.readEntity(String.class);
+        }
+        else
+        {
+            throw new OutboundAPIClientHTTPException("Error getting api version",
+                targetVersion.getUri(),
+                response.getStatus());
+        }
+        return apiVersion;
     }
 }

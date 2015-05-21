@@ -102,6 +102,8 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     private EventDispatcher eventDispatcher;
 
+    private String version;
+
     private boolean shutdown = false;
 
     /**
@@ -109,15 +111,23 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      * 
      * @param data Configuration data for the client. See {@link ConfigurationData} for details of
      *            what data is required.
+     * @param version The version indicated by the client
      * @throws OutboundAPIClientException
      */
-    public OutboundAPIClient(final ConfigurationData data) throws OutboundAPIClientException
+    public OutboundAPIClient(final ConfigurationData data, final String version)
+        throws OutboundAPIClientException
     {
         this.config = new ConfigurationData(data);
+        this.version = version;
 
         apiconn =
             new APIConnection(config.getMServer(), config.getMUser(), config.getMUserPassword());
         currUserEditLink = apiconn.getCurrentUserLink();
+        apiconn.setVersion(version);
+        if (!version.trim().equalsIgnoreCase(apiconn.getAPIVersion().trim()))
+        {
+            throw new OutboundAPIClientException("Api version indicated to start plugin mismatch with api version in use");
+        }
 
         // Create a cache of the REST links associated with each VM
         mapNameToVMLinks =
