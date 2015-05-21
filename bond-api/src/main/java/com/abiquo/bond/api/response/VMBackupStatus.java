@@ -20,6 +20,7 @@
  */
 package com.abiquo.bond.api.response;
 
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -34,8 +35,8 @@ import com.abiquo.bond.api.abqapi.VMMetadata;
  */
 public class VMBackupStatus implements Comparable<VMBackupStatus>
 {
-    public static DateTimeFormatter dateFormatter = DateTimeFormatter
-        .ofPattern(VMMetadata.DATE_FORMAT);// "yyyy/MM/dd HH:mm:ss Z"
+    public static final DateTimeFormatter dateFormatter = DateTimeFormatter
+        .ofPattern(VMMetadata.DATE_FORMAT); // "yyyy/MM/dd HH:mm:ss Z"
 
     private String reason;
 
@@ -45,7 +46,9 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
 
     private String type = "complete";
 
-    private ZonedDateTime date;
+    private ZonedDateTime dateUTC;
+
+    private ZoneOffset userOffsetSaved;
 
     private long size;
 
@@ -62,7 +65,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     {
         Map<String, Object> metadata = new HashMap<>();
 
-        metadata.put(VMMetadata.DATE, date.format(dateFormatter));
+        metadata.put(VMMetadata.DATE, dateUTC.format(dateFormatter));
         metadata.put("status", state.toString());
         metadata.put("name", name);
         metadata.put("size", size);
@@ -88,9 +91,9 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
         this.type = type;
     }
 
-    public void setDate(final ZonedDateTime date)
+    public void setDateUTC(final ZonedDateTime date)
     {
-        this.date = date;
+        this.dateUTC = date;
     }
 
     public void setSize(final long size)
@@ -106,7 +109,7 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     @Override
     public int compareTo(final VMBackupStatus o)
     {
-        return date.compareTo(o.date);
+        return dateUTC.compareTo(o.dateUTC);
     }
 
     public String getVmRestorePoint()
@@ -122,6 +125,21 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     public String getName()
     {
         return name;
+    }
+
+    public ZonedDateTime getDateUTC()
+    {
+        return dateUTC;
+    }
+
+    public ZoneOffset getUserOffsetSaved()
+    {
+        return userOffsetSaved;
+    }
+
+    public void setUserOffsetSaved(final ZoneOffset userOffsetSaved)
+    {
+        this.userOffsetSaved = userOffsetSaved;
     }
 
 }

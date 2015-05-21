@@ -37,7 +37,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
 
     private String type = "complete";
 
-    private ZonedDateTime date;
+    private ZonedDateTime dateUTC;
 
     private long size;
 
@@ -56,7 +56,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
     {
         Map<String, Object> metadata = new HashMap<>();
 
-        metadata.put(VMMetadata.DATE, date.format(VMBackupStatus.dateFormatter));
+        metadata.put(VMMetadata.DATE, dateUTC.format(VMBackupStatus.dateFormatter));
         metadata.put("name", name);
         metadata.put("size", size);
         metadata.put("type", type);
@@ -75,9 +75,9 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
         this.type = type;
     }
 
-    public void setDate(final ZonedDateTime date)
+    public void setDateUTC(final ZonedDateTime date)
     {
-        this.date = date;
+        this.dateUTC = date;
     }
 
     public void setSize(final long size)
@@ -93,7 +93,7 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
     @Override
     public int compareTo(final VMRestoreStatus o)
     {
-        return date.compareTo(o.date);
+        return dateUTC.compareTo(o.dateUTC);
     }
 
     public String getVmRestorePoint()
@@ -119,6 +119,11 @@ public class VMRestoreStatus implements Comparable<VMRestoreStatus>
     public void setResultId(final String resultId)
     {
         this.resultId = resultId;
+    }
+
+    public ZonedDateTime getDateUTC()
+    {
+        return dateUTC;
     }
 
 }
