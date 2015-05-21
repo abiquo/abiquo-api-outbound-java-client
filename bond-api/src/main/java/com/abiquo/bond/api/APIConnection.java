@@ -57,8 +57,6 @@ public class APIConnection
 
     protected WrapperNotification wrapperNotifications;
 
-    protected String version;
-
     /**
      * This constructor create a Client instance and a WebTarget instance representing the base URI
      * of the Abiquo API. Either of these can be used to create new WebTarget instances. The Client
@@ -153,18 +151,9 @@ public class APIConnection
         }
     }
 
-    public String getVersion()
-    {
-        return version;
-    }
-
-    public void setVersion(final String version)
-    {
-        this.version = version;
-    }
-
     /**
      * Returns the API Version
+     * 
      * @return api version
      * @throws OutboundAPIClientHTTPException
      */
