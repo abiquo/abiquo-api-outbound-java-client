@@ -120,9 +120,12 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
         apiconn =
             new APIConnection(config.getMServer(), config.getMUser(), config.getMUserPassword());
         currUserEditLink = apiconn.getCurrentUserLink();
-        if (!version.trim().equalsIgnoreCase(apiconn.getAPIVersion().trim()))
+        String apiVersion = apiconn.getAPIVersion().trim();
+        if (!version.trim().equalsIgnoreCase(apiVersion))
         {
-            throw new OutboundAPIClientException("Api version indicated to start plugin mismatch with api version in use");
+            throw new OutboundAPIClientException(String.format(
+                "Api version indicated to start plugin (%s) mismatch with api version in use (%s)",
+                version, apiVersion));
         }
 
         // Create a cache of the REST links associated with each VM
