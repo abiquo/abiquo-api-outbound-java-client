@@ -364,7 +364,8 @@ public class BackupEventConfiguration
             EnumSet<WEEKDAYS> allweek = EnumSet.allOf(WEEKDAYS.class);
             for (WEEKDAYS day : allweek)
             {
-                if (lckeyset.contains(day.getKey()))
+                if (lckeyset.contains(day.getKey())
+                    && "true".equalsIgnoreCase((String) settings.get(day.getKey())))
                 {
                     days.add(day);
                 }
