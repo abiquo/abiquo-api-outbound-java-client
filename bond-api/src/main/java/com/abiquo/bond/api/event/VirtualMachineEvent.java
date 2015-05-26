@@ -203,12 +203,12 @@ public class VirtualMachineEvent extends APIEvent
                     {
                         bcComplete = new BackupEventConfiguration(configdata);
                     }
-                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.FILESYSTEM);
+                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.SNAPSHOT);
                     if (configdata != null)
                     {
                         bcSnapshot = new BackupEventConfiguration(configdata);
                     }
-                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.SNAPSHOT);
+                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.FILESYSTEM);
                     if (configdata != null)
                     {
                         bcFileSystem = new BackupEventConfiguration(configdata);
