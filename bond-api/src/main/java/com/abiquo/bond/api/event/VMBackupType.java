@@ -20,39 +20,11 @@
  */
 package com.abiquo.bond.api.event;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 
 public enum VMBackupType
 {
-    COMPLETE("Complete"), FILESYSTEM("File System"), SNAPSHOT("Snapshot");
-
-    private final static Logger logger = LoggerFactory.getLogger(VMBackupType.class);
-
-    private static Map<String, Method> getConfigMethods = new HashMap<>();
-    static
-    {
-        try
-        {
-            getConfigMethods.put("Complete", VirtualMachineEvent.class.getMethod(
-                "getCompleteConfiguration", (Class< ? >[]) null));
-            getConfigMethods.put("File System", VirtualMachineEvent.class.getMethod(
-                "getCompleteConfiguration", (Class< ? >[]) null));
-            getConfigMethods.put("Snapshot", VirtualMachineEvent.class.getMethod(
-                "getCompleteConfiguration", (Class< ? >[]) null));
-        }
-        catch (NoSuchMethodException | SecurityException e)
-        {
-            logger.error("Unexpected error resolving event methods", e);
-        }
-    }
+    COMPLETE("Complete");
 
     private String displaytext;
 
@@ -66,18 +38,8 @@ public enum VMBackupType
         return displaytext;
     }
 
-    @SuppressWarnings("unchecked")
     public Optional<BackupEventConfiguration> getConfigData(final VirtualMachineEvent event)
     {
-        Method method = getConfigMethods.get(displaytext);
-        try
-        {
-            return (Optional<BackupEventConfiguration>) method.invoke(event, (Object[]) null);
-        }
-        catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
-        {
-            logger.error("Unexpected error executing event method", e);
-        }
-        return Optional.absent();
+        return event.getCompleteConfiguration();
     }
 }

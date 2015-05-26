@@ -67,24 +67,11 @@ public enum VMBackupConfiguration
 
     public String getDisplayText(final VMBackupType type, final VirtualMachineEvent event)
     {
-        BackupEventConfiguration cfg;
         Optional<BackupEventConfiguration> optcfg = Optional.absent();
-        switch (type)
-        {
-            case COMPLETE:
-                optcfg = event.getCompleteConfiguration();
-                break;
-            case FILESYSTEM:
-                optcfg = event.getCompleteConfiguration();
-                break;
-            case SNAPSHOT:
-                optcfg = event.getCompleteConfiguration();
-                break;
-        }
+        optcfg = event.getCompleteConfiguration();
         if (optcfg.isPresent())
         {
-            cfg = optcfg.get();
-            return formatDisplayText(cfg);
+            return formatDisplayText(optcfg.get());
         }
         return "";
     }

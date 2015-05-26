@@ -20,6 +20,7 @@
  */
 package com.abiquo.bond.api.event;
 
+import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
 import java.util.ArrayList;
@@ -27,6 +28,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.abiquo.bond.api.abqapi.VMMetadata;
 import com.abiquo.event.model.Event;
@@ -41,6 +46,8 @@ import com.google.common.base.Optional;
  */
 public class VirtualMachineEvent extends APIEvent
 {
+    private static final Logger logger = LoggerFactory.getLogger(VirtualMachineEvent.class);
+
     protected String vmname;
 
     protected String hypervisorname;
@@ -61,13 +68,9 @@ public class VirtualMachineEvent extends APIEvent
 
     private BackupEventConfiguration bcComplete;
 
-    private BackupEventConfiguration bcSnapshot;
-
-    private BackupEventConfiguration bcFileSystem;
-
     private boolean backupIsConfigured = false;
 
-    private Map<VMBackupType, EnumSet<VMBackupConfiguration>> reqCfgs;
+    private EnumSet<VMBackupConfiguration> reqCfgs;
 
     /**
      * Extracts the name of the machine and the backup configuration data from the supplied
@@ -201,34 +204,23 @@ public class VirtualMachineEvent extends APIEvent
                         (Map<String, Object>) backupschedule.get(VMMetadata.COMPLETE);
                     if (configdata != null)
                     {
+                        logger.debug("Complete backup configuration found for vm {}: {}",
+                            this.vmname, configdata);
                         bcComplete = new BackupEventConfiguration(configdata);
-                    }
-                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.SNAPSHOT);
-                    if (configdata != null)
-                    {
-                        bcSnapshot = new BackupEventConfiguration(configdata);
-                    }
-                    configdata = (Map<String, Object>) backupschedule.get(VMMetadata.FILESYSTEM);
-                    if (configdata != null)
-                    {
-                        bcFileSystem = new BackupEventConfiguration(configdata);
+                        backupIsConfigured = true;
+                        reqCfgs = getEnabledConfigurations(bcComplete);
                     }
 
-                    backupIsConfigured = true;
-
-                    reqCfgs = new HashMap<>();
-                    if (bcComplete != null)
+                    List<String> otherConfigs =
+                        backupschedule.keySet().stream()
+                            .filter(k -> !"complete".equalsIgnoreCase(k))
+                            .filter(k -> backupschedule.get(k) != null)
+                            .map(k -> format("%s : %s", k, backupschedule.get(k).toString()))
+                            .collect(Collectors.toList());
+                    if (!otherConfigs.isEmpty())
                     {
-                        reqCfgs.put(VMBackupType.COMPLETE, getEnabledConfigurations(bcComplete));
-                    }
-                    if (bcSnapshot != null)
-                    {
-                        reqCfgs.put(VMBackupType.SNAPSHOT, getEnabledConfigurations(bcSnapshot));
-                    }
-                    if (bcFileSystem != null)
-                    {
-                        reqCfgs
-                            .put(VMBackupType.FILESYSTEM, getEnabledConfigurations(bcFileSystem));
+                        logger.warn("The are no compatible backup configurations for vm {}: {}",
+                            this.vmname, otherConfigs);
                     }
                 }
             }
@@ -256,19 +248,6 @@ public class VirtualMachineEvent extends APIEvent
                             return true;
                         }
                         break;
-                    case FILESYSTEM:
-                        if (bcFileSystem != null
-                            && bcFileSystem.isConfigured(acceptableConfigurations))
-                        {
-                            return true;
-                        }
-                        break;
-                    case SNAPSHOT:
-                        if (bcSnapshot != null && bcSnapshot.isConfigured(acceptableConfigurations))
-                        {
-                            return true;
-                        }
-                        break;
                 }
             }
         }
@@ -278,16 +257,6 @@ public class VirtualMachineEvent extends APIEvent
     public Optional<BackupEventConfiguration> getCompleteConfiguration()
     {
         return Optional.fromNullable(bcComplete);
-    }
-
-    public Optional<BackupEventConfiguration> getSnapshotConfiguration()
-    {
-        return Optional.fromNullable(bcSnapshot);
-    }
-
-    public Optional<BackupEventConfiguration> getFileSystemConfiguration()
-    {
-        return Optional.fromNullable(bcFileSystem);
     }
 
     private EnumSet<VMBackupConfiguration> getEnabledConfigurations(
@@ -317,7 +286,7 @@ public class VirtualMachineEvent extends APIEvent
         return set;
     }
 
-    public Map<VMBackupType, EnumSet<VMBackupConfiguration>> getRequiredConfigurations()
+    public EnumSet<VMBackupConfiguration> getRequiredConfigurations()
     {
         return reqCfgs;
     }
