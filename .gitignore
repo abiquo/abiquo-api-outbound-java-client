@@ -5,3 +5,4 @@ test-output
 .project
 velocity.log
 catalina.base_IS_UNDEFINED/
+.java-version

@@ -71,7 +71,7 @@ public enum VMBackupConfiguration
         optcfg = event.getCompleteConfiguration();
         if (optcfg.isPresent())
         {
-            return formatDisplayText(optcfg.get());
+            return event.getVMName().concat("-").concat(formatDisplayText(optcfg.get()));
         }
         return "";
     }
