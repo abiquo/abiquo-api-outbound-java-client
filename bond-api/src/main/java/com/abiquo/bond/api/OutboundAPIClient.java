@@ -20,6 +20,8 @@
  */
 package com.abiquo.bond.api;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.time.Instant;
@@ -30,6 +32,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +48,9 @@ import com.abiquo.bond.api.plugin.PluginInterface;
 import com.abiquo.bond.api.response.ResponsesHandler;
 import com.abiquo.event.model.Event;
 import com.abiquo.model.rest.RESTLink;
+import com.google.common.base.Enums;
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 
 /**
  * This class is the central controller for the Outbound API client. It's main functions are:
@@ -106,13 +111,13 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     /**
      * The purpose of the constructor is to identify and load plugins.
-     * 
+     *
      * @param data Configuration data for the client. See {@link ConfigurationData} for details of
      *            what data is required.
      * @param version The version indicated by the client
      * @throws OutboundAPIClientException
      */
-    public OutboundAPIClient(final ConfigurationData data, final String version)
+    public OutboundAPIClient(final ConfigurationData data, final File propertiesFile, final String version)
         throws OutboundAPIClientException
     {
         this.config = new ConfigurationData(data);
@@ -132,6 +137,29 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
         mapNameToVMLinks =
             new NameToVMLinks(config.getMServer(), config.getMUser(), config.getMUserPassword());
 
+        Properties properties = new Properties();
+        try
+        {
+            FileInputStream inputStream = new FileInputStream(propertiesFile);
+            properties.load(inputStream);
+        }
+        catch (IOException e)
+        {
+            Throwables.propagate(e);
+        }
+
+        long timePeriod =
+            new Long(properties.getProperty("avbc_responses_handler_period", "10")).longValue();
+        String timeUnitValue = properties.getProperty("avbc_responses_handler_timeunit", "minutes");
+        Optional<TimeUnit> timeUnitEnum =
+            Enums.getIfPresent(TimeUnit.class, timeUnitValue.toUpperCase());
+        if (!timeUnitEnum.isPresent())
+        {
+            logger
+                .warn("{} is not a valid java.util.concurrent.TimeUnit, using MINUTES as default", timeUnitValue);
+        }
+        TimeUnit timeUnit = timeUnitEnum.or(TimeUnit.MINUTES);
+
         // Set up response handlers to fetch data from the third party applications and update
         // Abiquo server with it
         // We need to get the repeat time from the configuration at some point - for now default it
@@ -141,8 +169,8 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
                 config.getMUser(),
                 config.getMUserPassword(),
                 mapNameToVMLinks,
-                10,
-                TimeUnit.MINUTES);
+                timePeriod,
+                timeUnit);
 
         // Find and load any plugins on the classpath that support the returning of data from the
         // third party app to Abiquo. At the moment this just means Backup plugins
@@ -201,7 +229,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
     /**
      * Allows the client to pass messages back to the client wrapper without interrupting the flow
      * of the program.
-     * 
+     *
      * @param handler notification handler supplied by the client wrapper
      */
     public void setNotificationHandler(final WrapperNotification handler)
@@ -224,7 +252,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
     /**
      * Pass a notification and exception back to the client wrapper if a notification handler has
      * been set
-     * 
+     *
      * @param msg the notification to be return to the client wrapper
      * @param t the exception to be return to the client wrapper
      */
@@ -240,7 +268,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      * When the wrapper class is closing down it should call this method to get the timestamp of the
      * last outbound api event that has been handled. This timestamp can then be used the next time
      * the client starts up to fecth messages from the permanent event store.
-     * 
+     *
      * @return Timestamp of last processed outbound api event
      */
     public LocalDateTime getLastEventTimestamp()
@@ -290,7 +318,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     /**
      * Returns a Set of instances of successfully loaded plugins
-     * 
+     *
      * @return Set of PluginInterface instances
      */
     public Set<PluginInterface> getPluginList()
@@ -300,7 +328,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     /**
      * Returns a List of exceptions thrown by plugins during loading
-     * 
+     *
      * @return List of Throwables
      */
     public List<Throwable> getLoadFailures()
@@ -310,7 +338,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
     /**
      * Opens an HTTP connection to the M server
-     * 
+     *
      * @throws OutboundAPIClientException if any errors occur during the connection attempt
      */
     public void run() throws OutboundAPIClientException

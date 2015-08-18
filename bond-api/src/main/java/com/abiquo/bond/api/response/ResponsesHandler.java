@@ -31,7 +31,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
@@ -46,6 +48,7 @@ import com.abiquo.bond.api.abqapi.VMMetadata;
 import com.abiquo.bond.api.plugin.BackupPluginInterface;
 import com.abiquo.bond.api.plugin.PluginException;
 import com.abiquo.model.rest.RESTLink;
+import com.abiquo.model.transport.error.ErrorsDto;
 import com.abiquo.server.core.cloud.MetadataDto;
 import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
@@ -107,6 +110,13 @@ public class ResponsesHandler extends APIConnection implements Runnable
         }
     }
 
+    private Response getMetadataResponse(final RESTLink link)
+    {
+        WebTarget targetMetaData = client.target(link.getHref());
+        Invocation.Builder invocationBuilderMeta = targetMetaData.request(MetadataDto.MEDIA_TYPE);
+        return invocationBuilderMeta.get();
+    }
+
     @Override
     public void run()
     {
@@ -115,18 +125,15 @@ public class ResponsesHandler extends APIConnection implements Runnable
             try
             {
                 VMBackupRestorePairStatusList event = resultQueue.take();
-
                 String vmName = event.getVmName();
+                List<VMBackupRestorePairStatus> pairStatusList = event.getPairStatusesList();
                 Optional<RESTLink> optlink =
                     mapNameToVMLinks.getLink(vmName, NameToVMLinks.VM_LINK_METADATA);
 
                 if (optlink.isPresent())
                 {
                     RESTLink link = optlink.get();
-                    WebTarget targetMetaData = client.target(link.getHref());
-                    Invocation.Builder invocationBuilderMeta =
-                        targetMetaData.request(MetadataDto.MEDIA_TYPE);
-                    Response responseMeta = invocationBuilderMeta.get();
+                    Response responseMeta = getMetadataResponse(link);
                     int statusMeta = responseMeta.getStatus();
                     if (statusMeta == 200)
                     {
@@ -145,7 +152,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
 
                             List<Map<String, Object>> resultslist = new ArrayList<>();
 
-                            for (VMBackupRestorePairStatus pairStatus : event.pairStatusesList)
+                            for (VMBackupRestorePairStatus pairStatus : pairStatusList)
                             {
 
                                 Map<String, Object> backupStatusMetadata =
@@ -199,9 +206,24 @@ public class ResponsesHandler extends APIConnection implements Runnable
                                 }
                                 else
                                 {
-                                    logger.error(
-                                        "Error occurred while updating the metadata of vm {}: {}",
-                                        vmName, response.getStatusInfo().getReasonPhrase());
+                                    String messageCause;
+                                    try
+                                    {
+                                        messageCause = response.readEntity(ErrorsDto.class)
+                                        .getCollection().stream().map(error -> format("%s-%s",
+                                            error.getCode(), error.getMessage()))
+                                        .collect(Collectors.joining(","));
+                                    }
+                                    catch (ProcessingException | IllegalStateException ex)
+                                    {
+                                        messageCause = "Cannot deserialize error";
+                                    }
+                                    logger
+                                        .error(
+                                            "Error occurred while updating the metadata of vm {}: {} {}",
+                                            new Object[] {vmName,
+                                            response.getStatusInfo().getReasonPhrase(),
+                                            messageCause});
                                 }
                             }
                             else
@@ -212,7 +234,8 @@ public class ResponsesHandler extends APIConnection implements Runnable
                                         vmName);
                             }
                         }
-                        else
+                        // TODO add it even if metadata is null
+                        else if (!pairStatusList.isEmpty())
                         {
                             logger
                                 .error(

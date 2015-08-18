@@ -65,7 +65,10 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     {
         Map<String, Object> metadata = new HashMap<>();
 
-        metadata.put(VMMetadata.DATE, dateUTC.format(dateFormatter));
+        if (dateUTC != null)
+        {
+            metadata.put(VMMetadata.DATE, dateUTC.format(dateFormatter));
+        }
         metadata.put("status", state.toString());
         metadata.put("name", name);
         metadata.put("size", size);
@@ -109,6 +112,14 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     @Override
     public int compareTo(final VMBackupStatus o)
     {
+        if (dateUTC == null)
+        {
+            return -1;
+        }
+        if (o == null || o.dateUTC == null)
+        {
+            return 1;
+        }
         return dateUTC.compareTo(o.dateUTC);
     }
 
@@ -130,6 +141,21 @@ public class VMBackupStatus implements Comparable<VMBackupStatus>
     public ZonedDateTime getDateUTC()
     {
         return dateUTC;
+    }
+
+    public BackupResultEnum getState()
+    {
+        return state;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public long getSize()
+    {
+        return size;
     }
 
     public ZoneOffset getUserOffsetSaved()
