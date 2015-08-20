@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -100,13 +102,13 @@ public class ResponsesHandler extends APIConnection implements Runnable
             handler.setQueue(resultQueue);
             handler.linkToVMCache(mapNameToVMLinks.getVMNames());
             resultsfetchers.add(scheduler.scheduleAtFixedRate(handler, 0, timeperiod, timeunit));
-            logger.debug("Backup results handler {} running at {} {} intervals", new Object[] {
-            handler.getClass(), timeperiod, timeunit.toString().toLowerCase()});
+            logger.debug("Backup results handler {} running at {} {} intervals",
+                new Object[] {handler.getClass(), timeperiod, timeunit.toString().toLowerCase()});
         }
         catch (PluginException e)
         {
-            wrapperNotifications.notification("Failed to start backup results handler "
-                + plugin.getClass().getName(), e);
+            wrapperNotifications.notification(
+                "Failed to start backup results handler " + plugin.getClass().getName(), e);
         }
     }
 
@@ -168,10 +170,10 @@ public class ResponsesHandler extends APIConnection implements Runnable
                                     // FIXME should be in a list, but what happens with UI?
                                     {
                                         backupStatusMetadata.put(VMMetadata.RESTORE, "requested");
-                                        restoreStatus.setName(backupStatusMetadata.get(
-                                            VMMetadata.NAME).toString());
-                                        restoreStatus.setSize((long) backupStatusMetadata
-                                            .get(VMMetadata.SIZE));
+                                        restoreStatus.setName(
+                                            backupStatusMetadata.get(VMMetadata.NAME).toString());
+                                        restoreStatus.setSize(
+                                            (long) backupStatusMetadata.get(VMMetadata.SIZE));
                                         backupStatusMetadata.put("restoreInfo",
                                             restoreStatus.getMetaData());
                                     }
@@ -184,7 +186,7 @@ public class ResponsesHandler extends APIConnection implements Runnable
                             backupResults.put(VMMetadata.RESULTS, resultslist);
                             resultsMetadata.put(VMMetadata.LAST_BACKUPS, backupResults);
 
-                            if (!originalMetadata.toString().equals(resultsMetadata.toString()))
+                            if (!equalsMetadataString(originalMetadata, resultsMetadata))
                             {
                                 Map<String, Object> withMetadataTag = new HashMap<>();
                                 withMetadataTag.put(VMMetadata.METADATA, resultsMetadata);
@@ -193,16 +195,14 @@ public class ResponsesHandler extends APIConnection implements Runnable
                                 WebTarget targetUpdate = client.target(link.getHref());
                                 Invocation.Builder invocationBuilder =
                                     targetUpdate.request(MetadataDto.SHORT_MEDIA_TYPE_JSON);
-                                Response response =
-                                    invocationBuilder.put(Entity.entity(resourceObjectMeta,
-                                        MetadataDto.SHORT_MEDIA_TYPE_JSON));
+                                Response response = invocationBuilder.put(Entity
+                                    .entity(resourceObjectMeta, MetadataDto.SHORT_MEDIA_TYPE_JSON));
                                 int status = response.getStatus();
                                 if (status == 200)
                                 {
-                                    logger
-                                        .debug(
-                                            "Backup/restore results status for vm {} updated successfully",
-                                            vmName);
+                                    logger.debug(
+                                        "Backup/restore results status for vm {} updated successfully",
+                                        vmName);
                                 }
                                 else
                                 {
@@ -210,9 +210,10 @@ public class ResponsesHandler extends APIConnection implements Runnable
                                     try
                                     {
                                         messageCause = response.readEntity(ErrorsDto.class)
-                                        .getCollection().stream().map(error -> format("%s-%s",
-                                            error.getCode(), error.getMessage()))
-                                        .collect(Collectors.joining(","));
+                                            .getCollection().stream()
+                                            .map(error -> format("%s-%s", error.getCode(),
+                                                error.getMessage()))
+                                            .collect(Collectors.joining(","));
                                     }
                                     catch (ProcessingException | IllegalStateException ex)
                                     {
@@ -228,24 +229,20 @@ public class ResponsesHandler extends APIConnection implements Runnable
                             }
                             else
                             {
-                                logger
-                                    .debug(
-                                        "No changes from backup/restore of virtual machine {} detected. So no update is performed",
-                                        vmName);
+                                logger.debug(
+                                    "No changes from backup/restore of virtual machine {} detected. So no update is performed",
+                                    vmName);
                             }
                         }
                         // TODO add it even if metadata is null
                         else if (!pairStatusList.isEmpty())
                         {
-                            logger
-                                .error(
-                                    "Failed to update backup status for vm {} because original metadata is null",
-                                    vmName);
-                            wrapperNotifications
-                                .notification(
-                                    format(
-                                        "Failed to update backup status of %s because original metadata is null",
-                                        vmName), link.getHref(), statusMeta);
+                            logger.error(
+                                "Failed to update backup status for vm {} because original metadata is null",
+                                vmName);
+                            wrapperNotifications.notification(format(
+                                "Failed to update backup status of %s because original metadata is null",
+                                vmName), link.getHref(), statusMeta);
                         }
                     }
                     else
@@ -267,4 +264,9 @@ public class ResponsesHandler extends APIConnection implements Runnable
         }
     }
 
+    private static boolean equalsMetadataString(final Map<String, Object> a,
+        final Map<String, Object> b)
+    {
+        return Objects.equals(new TreeMap<>(a).toString(), new TreeMap<>(b).toString());
+    }
 }

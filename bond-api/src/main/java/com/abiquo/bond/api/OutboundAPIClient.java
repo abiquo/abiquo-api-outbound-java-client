@@ -117,8 +117,8 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      * @param version The version indicated by the client
      * @throws OutboundAPIClientException
      */
-    public OutboundAPIClient(final ConfigurationData data, final File propertiesFile, final String version)
-        throws OutboundAPIClientException
+    public OutboundAPIClient(final ConfigurationData data, final File propertiesFile,
+        final String version) throws OutboundAPIClientException
     {
         this.config = new ConfigurationData(data);
 
@@ -126,7 +126,7 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
             new APIConnection(config.getMServer(), config.getMUser(), config.getMUserPassword());
         currUserEditLink = apiconn.getCurrentUserLink();
         String apiVersion = apiconn.getAPIVersion().trim();
-        if (!version.trim().equalsIgnoreCase(apiVersion))
+        if (!apiVersion.trim().equalsIgnoreCase(version))
         {
             throw new OutboundAPIClientException(String.format(
                 "Api version indicated to start plugin (%s) mismatch with api version in use (%s)",
@@ -155,8 +155,8 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
             Enums.getIfPresent(TimeUnit.class, timeUnitValue.toUpperCase());
         if (!timeUnitEnum.isPresent())
         {
-            logger
-                .warn("{} is not a valid java.util.concurrent.TimeUnit, using MINUTES as default", timeUnitValue);
+            logger.warn("{} is not a valid java.util.concurrent.TimeUnit, using MINUTES as default",
+                timeUnitValue);
         }
         TimeUnit timeUnit = timeUnitEnum.or(TimeUnit.MINUTES);
 
@@ -164,13 +164,12 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
         // Abiquo server with it
         // We need to get the repeat time from the configuration at some point - for now default it
         // to 10 minutes.
-        responses =
-            new ResponsesHandler(config.getMServer(),
-                config.getMUser(),
-                config.getMUserPassword(),
-                mapNameToVMLinks,
-                timePeriod,
-                timeUnit);
+        responses = new ResponsesHandler(config.getMServer(),
+            config.getMUser(),
+            config.getMUserPassword(),
+            mapNameToVMLinks,
+            timePeriod,
+            timeUnit);
 
         // Find and load any plugins on the classpath that support the returning of data from the
         // third party app to Abiquo. At the moment this just means Backup plugins
@@ -218,12 +217,11 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
 
         // Initialise the class that will fecth events from the permanent store that may have been
         // missed since the last time the client was run
-        eventstore =
-            new EventStore(config.getMServer(),
-                config.getMUser(),
-                config.getMUserPassword(),
-                currUserEditLink,
-                mapNameToVMLinks);
+        eventstore = new EventStore(config.getMServer(),
+            config.getMUser(),
+            config.getMUserPassword(),
+            currUserEditLink,
+            mapNameToVMLinks);
     }
 
     /**
@@ -281,12 +279,11 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
      */
     public void startPlugins()
     {
-        translator =
-            new EventTranslator(config.getMServer(),
-                config.getMUser(),
-                config.getMUserPassword(),
-                currUserEditLink,
-                mapNameToVMLinks);
+        translator = new EventTranslator(config.getMServer(),
+            config.getMUser(),
+            config.getMUserPassword(),
+            currUserEditLink,
+            mapNameToVMLinks);
 
         for (BackupPluginInterface plugin : handlersWithResponses)
         {
@@ -431,13 +428,9 @@ public class OutboundAPIClient implements CommsHandler, EventStoreHandler
         try
         {
             Event event = AbiquoObjectMapper.OBJECT_MAPPER.instance().readValue(msg, Event.class);
-            logger.debug(
-                "Received event: Type:{} Action:{} Time:{}",
-                new Object[] {
-                event.getType(),
-                event.getAction(),
-                LocalDateTime.ofInstant(Instant.ofEpochMilli(event.getTimestamp()),
-                    ZoneId.systemDefault())});
+            logger.debug("Received event: Type:{} Action:{} Time:{}",
+                new Object[] {event.getType(), event.getAction(), LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(event.getTimestamp()), ZoneId.systemDefault())});
             Optional<APIEvent> optapievent = translator.translate(event);
             if (optapievent.isPresent())
             {
